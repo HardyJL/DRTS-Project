@@ -1,8 +1,8 @@
 class Budgets: 
     def __init__(self, component_id, budget, period, core_id):
         self.component_id = component_id
-        self.budget = budget
-        self.period = period
+        self.budget = float(budget)
+        self.period = float(period)
         self.core_id = core_id
 
 
