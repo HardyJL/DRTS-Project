@@ -10,12 +10,8 @@ class Solution:
     def __repr__(self) -> str:
         return f"{self.task_name} | {self.component_id} | {self.task_schedulable} | {self.avg_response_time} | {self.max_response_time} | {self.component_schedulable}" 
 
-    def to_dict(self):
-        return {
-            'task_name':self.task_name, 
-            'component_id':self.component_id,
-            'task_schedulable':self.task_schedulable,
-            'avg_response_time':self.avg_response_time,
-            'max_response_time':self.max_response_time,
-            'component_schedulable':self.component_schedulable
-        }
+    def __iter__(self):
+        return ([self.task_name, self.component_id, self.task_schedulable, self.avg_response_time, self.max_response_time, self.component_schedulable])
+
+    def header(self):
+        return (['task_name', 'component_id', 'task_schedulable', 'avg_response_time', 'max_response_time', 'component_schedulable'])

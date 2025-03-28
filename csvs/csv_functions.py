@@ -24,13 +24,13 @@ def load_budgets_from_csv():
 def load_task_from_csv():
     return
 
+
 def write_solution_to_csv(models, filename) -> None:
     try:
         with open(filename, 'w', newline='') as csvfile:
-            header = models[0].to_dict()
-            writer = csv.DictWriter(csvfile, header.keys)
-            writer.writeheader()
+            writer = csv.writer(csvfile)
+            writer.writerow(models[0].header())
             for model in models:
-                writer.writerow(model.to_dict())
+                writer.writerow(model.__iter__())
     except Exception as e:
         print(f"Error reading CSV file: {e}")
