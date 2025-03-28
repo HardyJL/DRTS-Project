@@ -35,5 +35,4 @@ if __name__ == "__main__":
     #task = Task(task_id= "Test", wcet=1, deadline=1, core_assignment="core1")
     #print(task)
     ######################START SIMULATION#####################
-    print("Starting Scheduling Simulator")
-    simulation("Test_Cases/"+sys.argv[1], max_cycles)
+    simulation(os.path.join(os.getcwd(),"Test_Cases/",sys.argv[1]), max_cycles)
