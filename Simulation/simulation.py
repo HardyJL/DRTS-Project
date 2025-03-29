@@ -8,5 +8,8 @@ import os.path
 
 def simulation(test_folder:str,max_cycles:int):
     #Use csv_function to initialize architecture, budgets and task
-    csvs.csv_functions.load_models_from_csv(test_folder)
+    architecture, budgets, tasks=csvs.csv_functions.load_models_from_csv(test_folder)
+    print(architecture)
+    print(budgets)
+    print(tasks)
     #architecture= 

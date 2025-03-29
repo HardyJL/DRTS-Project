@@ -3,7 +3,10 @@ import sys
 import os.path
 from Simulation.simulation import simulation
 
+"""
+python3 main.py 1-tiny-test-case 100
 
+"""
 
 if __name__ == "__main__":
 

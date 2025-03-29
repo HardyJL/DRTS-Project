@@ -1,27 +1,52 @@
 import csv
 import os.path
-
-def load_models_from_csv(folder_name:str)-> tuple:
+from models.architecture import Architecture
+from models.budgets import Budgets
+from models.task import Task
+def load_models_from_csv(folder_name:str)-> tuple[list[Architecture], list[Budgets], list[Task]]:
     models = []
     path=os.path.join(folder_name)
-    return load_architecture_from_csv(path+"/architecture.csv"),load_budgets_from_csv(),load_task_from_csv()
-    # try:
-    #     with open(filename, newline='') as csvfile:
-    #         reader = csv.reader(csvfile)
-    #         next(reader)  # Skip header
-    #         for row in reader:
-    #             models.append(*row)
-    #         return models
-    # except Exception as e:
-    #     print(f"Error reading CSV file: {e}")
+    return load_architecture_from_csv(path+"/architecture.csv"),load_budgets_from_csv(path+"/budgets.csv"),load_task_from_csv(path+"/tasks.csv")
+
 
 def load_architecture_from_csv(file):
     print(os.path.exists(file))
     print(file)
-    return
-def load_budgets_from_csv():
-    return
-def load_task_from_csv():
+    try:
+        architecture=[]
+        with open(file, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Skip header
+            for row in reader:
+                architecture.append(Architecture((row[0]), (row[1]), row[2]))
+            #print(architecture)    
+            return architecture
+    except Exception as e:
+        print(f"Error reading CSV architecture file: {e}")
+def load_budgets_from_csv(file):
+    try:
+        budgets=[]
+        with open(file, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Skip header
+            for row in reader:
+                budgets.append(Budgets((row[0]), (row[1]), row[2], row[3], row[4]))
+            #print(budgets)    
+            return budgets
+    except Exception as e:
+        print(f"Error reading CSV budgets file: {e}")
+def load_task_from_csv(file):
+    try:
+        tasks=[]
+        with open(file, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Skip header
+            for row in reader:
+                tasks.append(Task((row[0]), (row[1]), row[2], row[3], row[4]))
+            #print(tasks)    
+            return (tasks)
+    except Exception as e:
+        print(f"Error reading CSV task file: {e}")
     return
 
 
@@ -33,4 +58,4 @@ def write_solution_to_csv(models, filename) -> None:
             for model in models:
                 writer.writerow(model.__iter__())
     except Exception as e:
-        print(f"Error reading CSV file: {e}")
+        print(f"Error reading CSV writer file: {e}")
