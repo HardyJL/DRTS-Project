@@ -16,12 +16,12 @@ def simulation(test_folder:str,max_cycles:int):
 
     core_assignment={}
     for i in architecture:
-        core_assignment[i.core_id] = {} 
+        core_assignment[i.core_id] = (i,{}) 
     for i in budgets:
-        core_assignment[i.core_id][i.component_id] = []
+        core_assignment[i.core_id][1][i.component_id] = (i,[])
         for j in tasks:
             if j.component_ID==i.component_id:
-                core_assignment[i.core_id][i.component_id].append(j)
+                core_assignment[i.core_id][1][i.component_id][1].append(j)
     print(core_assignment)
 
 
