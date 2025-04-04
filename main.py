@@ -1,41 +1,40 @@
-from models import Task
 import sys
 import os.path
-from Simulation.simulation import simulation
 
-"""
-python3 main.py 1-tiny-test-case 100
+from simulation import Simulation
+from csv_functions import load_models_from_csv
+from models import Task, Core, Component
 
-"""
+def main():
+    #Check if folders exist
+    # if not os.path.exists(os.path.join(os.getcwd(), sys.argv[1])):
+    #     print("Test folder doesnt exist")
+    #     sys.exit()
+    architectures = os.path.join(os.getcwd(), sys.argv[1], "architecture.csv")
+    tasks = os.path.join(os.getcwd(), sys.argv[1], "tasks.csv")
+    budgets = os.path.join(os.getcwd(), sys.argv[1], "budgets.csv")
+
+    if not os.path.exists(architectures):
+        print("Architecture file does not exist")
+        sys.exit()
+    if not os.path.exists(tasks):
+        print("Tasks file does not exist")
+        sys.exit()
+    if not os.path.exists(budgets):
+        print("Budgets file does not exist")
+        sys.exit()
+
+    cores = load_models_from_csv(architectures, Core)
+    tasks = load_models_from_csv(tasks, Task)
+    componets = load_models_from_csv(budgets, Component)
+
+    for component in componets:
+        component.core = [core for core in cores if core.core_id == component.core_id][0]
+        component.tasks = [task for task in tasks if task.component_ID == component.component_id]
+        
+    
+    print("Components: ", componets)
+
 
 if __name__ == "__main__":
-
-
-    #To run:
-    #python3 simple_simulator.py <test> <cycles>
-
-    #Check input is right size
-    if len(sys.argv) < 3:
-        print("Too few arguments")
-        sys.exit(-1)
-
-    elif len(sys.argv)> 3:
-        print("Too many arguments")
-        sys.exit(-1)
-
-
-    #Check if folders exist
-    if not os.path.exists(os.path.join(os.getcwd(), "Test_Cases/"+sys.argv[1])):
-        print("Test folder doesnt exist")
-        sys.exit()
-    #ensure cycles is int
-    try:
-        max_cycles=int(sys.argv[2])
-    except:
-        print("max cycles must be an intreger")
-
-    
-    #task = Task(task_id= "Test", wcet=1, deadline=1, core_assignment="core1")
-    #print(task)
-    ######################START SIMULATION#####################
-    simulation(os.path.join(os.getcwd(),"Test_Cases/",sys.argv[1]), max_cycles)
+    main()
