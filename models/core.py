@@ -5,4 +5,4 @@ class Core:
         self.scheduler = scheduler
 
     def __repr__(self) -> str:
-        return f"\nCore ID = ({self.core_id}) | Seed factor ({self.speed_factor})"    
+        return f"\nCore ID = ({self.core_id}) | Seed factor ({self.speed_factor}) | Scheduler ({self.scheduler})"
