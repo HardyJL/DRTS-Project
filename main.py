@@ -3,28 +3,20 @@ import os.path
 
 from csv_functions import load_models_from_csv
 from models import Task, Core, Component
-from scheduler import earliest_deadline_first, fixed_priority_with_rm
+from simulation import Simulation
 
 def load_models(architectures, tasks, budgets):
-    cores = load_models_from_csv(architectures, Core)
-    tasks = load_models_from_csv(tasks, Task)
-    components = load_models_from_csv(budgets, Component)
+    cores, tasks, components = load_models_from_csv(architectures, Core), load_models_from_csv(tasks, Task), load_models_from_csv(budgets, Component)
 
-    assert len(cores) > 0 and len(tasks) > 0 and len(components) > 0 
+    assert len(cores) > 0 and len(tasks) > 0 and len(components) > 0 , "No cores, tasks or components found in the csv files"
 
     for component in components:
-        component.core = [core for core in cores if core.core_id == component.core_id][0]
-        if component.scheduler == 'EDF':
-            print("Using EDF scheduler")
-            component.tasks = earliest_deadline_first([task for task in tasks if task.component_ID == component.component_id])
-        elif component.scheduler == 'RM':
-            print("Using RM scheduler")
-            component.tasks = fixed_priority_with_rm([task for task in tasks if task.component_ID == component.component_id])
-        else:
-            print(component.scheduler)
-            sys.exit()
-    return components 
+        component.tasks = [task for task in tasks if task.component_ID == component.component_id]
 
+    for core in cores:
+        core.components = [component for component in components if component.core_id == core.core_id]
+
+    return cores 
 
 
 def main():
@@ -32,14 +24,15 @@ def main():
     assert len(sys.argv) == 2 and sys.argv[1] != "" and sys.argv[1] != None
     # check if the expected path is correct
     expected_path = os.path.join(os.getcwd(), sys.argv[1])
-    assert os.path.exists(expected_path)
+    assert os.path.exists(expected_path), f"Path {expected_path} does not exist"
 
     architectures, tasks, budgets = expected_path + "/architecture.csv", expected_path + "/tasks.csv", expected_path + "/budgets.csv"
-    assert os.path.exists(architectures) and os.path.exists(tasks) and os.path.exists(budgets)
+    assert os.path.exists(architectures) and os.path.exists(tasks) and os.path.exists(budgets), f"Path {architectures} or {tasks} or {budgets} does not exist"
 
-    components = load_models(architectures, tasks, budgets) 
-    print("Components: ", components)
+    cores = load_models(architectures, tasks, budgets) 
 
+    simulator = Simulation()
+    simulator.simulate(cores)
 
 if __name__ == "__main__":
     main()

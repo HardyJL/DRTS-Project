@@ -8,8 +8,7 @@ class Task:
             self.priority=None
         else:
             self.priority = float(priority)
-#task_name,wcet,period,component_id,priority
 
     def __repr__(self):
-        return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period}, Component_ID: {self.component_ID} | Priority: {self.priority}"
+        return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period} | Priority: {self.priority}"
 
