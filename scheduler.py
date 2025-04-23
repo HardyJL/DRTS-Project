@@ -1,6 +1,6 @@
 from typing import cast
 
-from .models import Task
+from models import Task
 
 class Scheduler:
     """

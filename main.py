@@ -4,15 +4,20 @@ import os.path
 from Simulation.simulation import simulation
 
 """
+To run:
+python3 main.py <test> <cycles>
+
 python3 main.py 1-tiny-test-case 100
+python3 main.py 2-small-test-case 100
+
 
 """
 
 if __name__ == "__main__":
 
 
-    #To run:
-    #python3 simple_simulator.py <test> <cycles>
+
+
 
     #Check input is right size
     if len(sys.argv) < 3:
