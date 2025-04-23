@@ -1,9 +1,9 @@
 import csv
 import os.path
-from models.architecture import Architecture
-from models.budgets import Budgets
+from models.core import Core
+from models.component import Component
 from models.task import Task
-def load_models_from_csv(folder_name:str)-> tuple[list[Architecture], list[Budgets], list[Task]]:
+def load_models_from_csv(folder_name:str)-> tuple[list[Core], list[Component], list[Task]]:
     models = []
     path=os.path.join(folder_name)
     return load_architecture_from_csv(path+"/architecture.csv"),load_budgets_from_csv(path+"/budgets.csv"),load_task_from_csv(path+"/tasks.csv")
@@ -18,7 +18,7 @@ def load_architecture_from_csv(file):
             reader = csv.reader(csvfile)
             next(reader)  # Skip header
             for row in reader:
-                architecture.append(Architecture((row[0]), (row[1]), row[2]))
+                architecture.append(Core((row[0]), (row[1]), row[2]))
             #print(architecture)    
             return architecture
     except Exception as e:
@@ -30,7 +30,7 @@ def load_budgets_from_csv(file):
             reader = csv.reader(csvfile)
             next(reader)  # Skip header
             for row in reader:
-                budgets.append(Budgets((row[0]), (row[1]), row[2], row[3], row[4]))
+                budgets.append(Component((row[0]), (row[1]), row[2], row[3], row[4]))
             #print(budgets)    
             return budgets
     except Exception as e:

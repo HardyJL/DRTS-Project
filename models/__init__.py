@@ -1,6 +1,6 @@
 from .task import Task
-from .architecture import Architecture
-from .budgets import Budgets
+from .core import Core
+from .component import Component
 from .solution import Solution
 
 __all__ = ['Task', 'Architecture','Budgets', 'Solution']
