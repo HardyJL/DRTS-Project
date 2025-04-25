@@ -4,7 +4,7 @@ from models.job import Job # Assuming you create this class
 class Component: 
     def __init__(self, component_id,scheduler ,budget, period, core_id):
         self.component_id = component_id
-        self.budget = float(budget)
+        self.budget = float(budget)  
         self.period = float(period)
         self.core_id = core_id
         self.scheduler = scheduler
@@ -17,21 +17,24 @@ class Component:
 
     def assign_task(self, task: Task):
         """Assigns a task to this component."""
+
         if task.component_ID == self.component_id:
             self.tasks[task.task_name] = task
-            # Potentially adjust task WCET here based on core speed if core info is available
-            # Or adjust when creating Jobs
+
         else:
             print(f"Warning: Task {task.task_name} component_id mismatch for Component {self.component_id}")
+
+
     def add_job_to_ready_queue(self, job: Job):
         """Adds a newly arrived job."""
         # Optionally sort immediately for EDF/RM if ready_queue is kept sorted
         self.ready_queue.append(job)
+
+
     def get_next_job_to_run(self) -> Job | None:
         """Selects the highest priority job based on the component scheduler."""
         if not self.ready_queue:
             return None
-
         if self.scheduler == "EDF":
             # Find job with earliest absolute deadline
             self.ready_queue.sort(key=lambda j: j.absolute_deadline)
@@ -50,8 +53,7 @@ class Component:
 
     def replenish_budget(self):
         """Replenishes the component's budget."""
-        # Simple model: Add Q. More complex models might cap it at Q.
-        self.current_budget = self.budget # Reset/Set to Q
+        self.current_budget = self.budget 
         self.budget_refresh_time += self.period
 
 #Camera_Sensor,RM,8,13,Core_1

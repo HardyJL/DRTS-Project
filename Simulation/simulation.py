@@ -9,20 +9,28 @@ from scheduler import Scheduler
 
 
 def simulation(test_folder:str,max_cycles:int):
+    print("Starting the simulation...\n--------------------------------------------------")
+    print("Fetching Data...\n--------------------------------------------------")
+
     cores, components, tasks=csvs.csv_functions.load_models_from_csv(test_folder)
+    print("Creating Dictionaries...\n--------------------------------------------------")
 
     cores_dict: dict[str, Core] = {core.core_id: core for core in cores} # Assuming architecture is list[Core]
     components_dict: dict[str, Component] = {comp.component_id: comp for comp in components} # Assuming budgets is list[Component]
     tasks_list: list[Task] = tasks # Assuming tasks is list[Task]
 
-
+    """
+    Initializes the dictionary associating cores with componentes
+    """
     for comp_id, comp_obj in components_dict.items():
         if comp_obj.core_id in cores_dict:
             cores_dict[comp_obj.core_id].assign_component(comp_obj)
         else:
             print(f"Error: Core {comp_obj.core_id} not found for component {comp_id}")
     
-    # Link tasks to components
+    """
+    Initializes the dictionary associating tasks with components
+    """
     for task_obj in tasks_list:
         if task_obj.component_ID in components_dict:
             components_dict[task_obj.component_ID].assign_task(task_obj)
@@ -30,20 +38,31 @@ def simulation(test_folder:str,max_cycles:int):
         else:
             print(f"Error: Component {task_obj.component_ID} not found for task {task_obj.task_name}")
 
-        # Initialize runtime state for components
+    
+    
+    """
+    Initialize current state data for components
+    """
     for comp in components_dict.values():
+        print("i")
         comp.current_budget = comp.budget
         comp.budget_refresh_time = comp.period # First refresh at the end of the first period
         comp.ready_queue = []
         comp.running_job = None
     print("--- Initialized Cores ---")
+    
+    
+    
+ 
     for core in cores_dict.values():
         print(core)
         for comp in core.components.values():
-            print(f"  {comp}") 
+            print(comp) 
     
     current_cycle = 0
-    # --- Create initial jobs ---
+    """
+    Print Statements showing initialized data
+    """
     for core_id, core in cores_dict.items():
         for comp_id, component in core.components.items():
             for task_name, task in component.tasks.items():
@@ -55,36 +74,6 @@ def simulation(test_folder:str,max_cycles:int):
         print(f"\n--- Cycle {current_cycle} ---")
         # ... rest of simulation logic using cores_dict ...
         break # Placeholder
-    # #Use csv_function to initialize architecture, budgets and task
-    # architecture, budgets, tasks=csvs.csv_functions.load_models_from_csv(test_folder)
-    # print(architecture)
-    # print(budgets)
-    # print(tasks)
-    # current_cycle = 0 
-    # scheduler=Scheduler()
-    # core_assignment={}
-    # # for i in architecture:
-    # #     core_assignment[i.core_id] = (i,{}) 
-    # # for i in budgets:
-    # #     core_assignment[i.core_id][1][i.component_id] = (i,[])
-    # #     for j in tasks:
-    # #         if j.component_ID==i.component_id:
-    # #             core_assignment[i.core_id][1][i.component_id][1].append(j)
-    # # # print(core_assignment)
-    # # for i in core_assignment:
-    # #     for j in core_assignment[i][1]:
-    # #         if (core_assignment[i][1][j][0].scheduler)=="RM":
-    # #             print(core_assignment[i][1][j][1])
-    # #             core_assignment[i][1][j][1]=scheduler.rate_monotonic(core_assignment[i][1][j][1])
-    # #         elif (core_assignment[i][1][j][0].scheduler)=="EDF":
-    # #             core_assignment[i][1][j][1]=scheduler.earliest_deadline_first(core_assignment[i][1][j][1])
-
-
-    # # print(core_assignment)
 
 
 
-    while current_cycle <= max_cycles:
-
-
-        break

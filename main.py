@@ -40,7 +40,6 @@ if __name__ == "__main__":
         print("max cycles must be an intreger")
 
     
-    # task = Task(task_name= "Test", wcet=1, deadline=1, core_assignment="core1")
-    # print(task)
+
     ######################START SIMULATION#####################
     simulation(os.path.join(os.getcwd(),"Test_Cases/",sys.argv[1]), max_cycles)

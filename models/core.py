@@ -9,14 +9,20 @@ class Core:
         self.running_component_id: str | None = None
     
     def assign_component(self, component: 'Budgets'):
+
+        
         """Assigns a component to this core."""
         if component.core_id == self.core_id:
             self.components[component.component_id] = component
         else:
             print(f"Warning: Component {component.component_id} core_id mismatch for Core {self.core_id}")
 
+
+
     def get_eligible_components(self) -> list['Budgets']:
+
         """Returns components on this core ready to run (have budget & ready tasks)."""
+
         eligible = []
         for comp in self.components.values():
             # Check budget and if there's anything waiting/running in the component
