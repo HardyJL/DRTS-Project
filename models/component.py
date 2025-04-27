@@ -1,5 +1,5 @@
 class Component: 
-    def __init__(self, component_id,scheduler ,budget, period,core_id, priority):
+    def __init__(self, component_id,scheduler, budget, period, core_id, priority):
         self.component_id = component_id
         self.budget = float(budget)
         self.period = float(period)

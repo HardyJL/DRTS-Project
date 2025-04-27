@@ -39,15 +39,15 @@ class Simulation:
             print(f"Current time: {current_time}")
             for core in self.cores:
                 core.ready_queue += [t for t in core.components if current_time % t.period == 0]
-                component: Component = schedule_object(core.scheduler, core.ready_queue)[0]
-                # if we have a component to execute we go ahead and update the values
-                if component:
+                if len(core.ready_queue) > 0:
+                    component: Component = schedule_object(core.scheduler, core.ready_queue)[0]
+                    # if we have a component to execute we go ahead and update the values
                     # if the component has not started we set the start time
                     check_if_started(component, current_time)
                     # get the ready queue of the tasks
                     component.ready_queue += [t for t in component.tasks if current_time % t.period == 0]
-                    current_task: Component = schedule_object(component.scheduler, component.ready_queue)[0]
-                    if current_task:
+                    if len(component.ready_queue) > 0:
+                        current_task: Component = schedule_object(component.scheduler, component.ready_queue)[0]
                         check_if_started(current_task, current_time)
                         if check_if_ended(current_task, current_time):
                             component.ready_queue.remove(current_task)
@@ -70,8 +70,12 @@ class Simulation:
         next_time = []
         for core in self.cores:
             if len(core.ready_queue) < 1:
-                remainder = min([c.period - (current_time % c.period) for c in core.components])
-                next_time.append(int(remainder))
+                next_time.append(int(min([c.period - (current_time % c.period) for c in core.components])))
             else:
-                return 1
+                for component in core.components:
+                    if len(component.ready_queue) < 1:
+                        next_time.append(int(min([c.period - (current_time % c.period) for c in component.tasks])))
+                    else:
+                        return 1
+        print("Next time: ",next_time)
         return min(next_time)
