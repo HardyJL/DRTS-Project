@@ -1,9 +1,9 @@
 class Core: 
-    def __init__(self, core_id, speed_factor, scheduler=None, components=None):
+    def __init__(self, core_id, speed_factor, scheduler=None):
         self.core_id = core_id
         self.speed_factor = float(speed_factor)
         self.scheduler = scheduler
-        self.components = components
+        self.components = []
         self.ready_queue = []
 
     def __repr__(self) -> str:

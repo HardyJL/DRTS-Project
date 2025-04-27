@@ -1,3 +1,3 @@
-from .scheduler import fixed_priority_with_rm, earliest_deadline_first
+from .scheduler import schedule_object 
 
-__all__ = ["fixed_priority_with_rm", "earliest_deadline_first"]
+__all__ = ["schedule_object"]

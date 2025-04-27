@@ -11,7 +11,7 @@ def load_models(architectures, tasks, budgets):
     assert len(cores) > 0 and len(tasks) > 0 and len(components) > 0 , "No cores, tasks or components found in the csv files"
 
     for component in components:
-        component.tasks = [task for task in tasks if task.component_ID == component.component_id]
+        component.tasks = [task for task in tasks if task.component_id == component.component_id]
 
     for core in cores:
         core.components = [component for component in components if component.core_id == core.core_id]
@@ -31,8 +31,8 @@ def main():
 
     cores = load_models(architectures, tasks, budgets) 
 
-    simulator = Simulation()
-    simulator.simulate(cores, int(sys.argv[2]))
+    simulator = Simulation(cores, int(sys.argv[2]))
+    simulator.simulate()
 
 if __name__ == "__main__":
     main()

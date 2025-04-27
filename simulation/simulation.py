@@ -1,40 +1,77 @@
-from models import Core, Component 
+from typing import cast
+from models import Core, Component, Task
+from scheduler import schedule_object
 
 class Simulation:
-    def simulate(self, cores: list[Core], simulation_time: int):
-        def schedule_object(scheduler, object_list):
-           if scheduler == "EDF":
-               return sorted(object_list, key= lambda obj: obj.period)
-           elif scheduler == "RM":
-               return sorted(object_list, key= lambda obj: obj.priority)
-           else:
-               raise ValueError(scheduler)
+    def __init__(self, cores: list[Core], simulation_time: int):
+        self.cores = cores
+        self.simulation_time = simulation_time
+
+    def simulate(self):
+        def check_if_started(obj: Component | Task, current_time: int) -> None:
+            if obj.current_start_time == 0:
+                obj.current_start_time = current_time
+
+        def check_if_ended(obj: Component | Task, current_time: int) -> bool:
+            comparing_value = obj.budget if type(obj) is Component else cast(Task, obj).wcet
+            if obj.current_execution >= comparing_value:
+                obj.response_times.append(current_time - obj.current_start_time)
+                if type(obj) is Component:
+                    print(f"Response time of {obj.component_id} is {obj.response_times[-1]}")
+                if type(obj) is Task:
+                    print(f"Response time of {obj.task_name} is {obj.response_times[-1]}")
+                obj.current_execution = 0
+                obj.current_start_time = 0
+                return True
+            return False
+
+        assert self.cores != None and len(self.cores) > 0, "No cores found"
         print("Simulating...")
-        # Set up a ready queue for each core this
-        # Based on the algrithm of the core make sure to ready queu is the correct component
-        # then for the component create a ready queue with the task
-        for core in cores:
+        # Initialize the ready queue for each core
+        # for each component in the ready queue inizialize the ready queue of tasks
+        for core in self.cores:
            core.components = schedule_object(core.scheduler, core.components)
            for component in core.components:
                component.tasks = schedule_object(component.scheduler, component.tasks)
 
         current_time = 0
-        while current_time < simulation_time:
-            for core in cores:
+        while current_time < self.simulation_time:
+            print(f"Current time: {current_time}")
+            for core in self.cores:
                 core.ready_queue += [t for t in core.components if current_time % t.period == 0]
-                current_component: Component = schedule_object(core.scheduler, core.ready_queue)[0]
-                if current_component:
-                    print(f"{current_component.component_id} - {current_component.current_execution} - {current_time}")
-                    current_component.current_execution += 1
-                    if (current_component.current_execution >= current_component.budget):
-                        current_component.current_execution = 0
-                        core.ready_queue.remove(current_component)
-                        
-            current_time += self.advance_time(current_time= current_time, ready_queue= core.ready_queue, components= core.components)
+                component: Component = schedule_object(core.scheduler, core.ready_queue)[0]
+                # if we have a component to execute we go ahead and update the values
+                if component:
+                    # if the component has not started we set the start time
+                    check_if_started(component, current_time)
+                    # get the ready queue of the tasks
+                    component.ready_queue += [t for t in component.tasks if current_time % t.period == 0]
+                    current_task: Component = schedule_object(component.scheduler, component.ready_queue)[0]
+                    if current_task:
+                        check_if_started(current_task, current_time)
+                        if check_if_ended(current_task, current_time):
+                            component.ready_queue.remove(current_task)
+                        current_task.current_execution += 1
+                    # if we have reached the end of the component we keep the response time
+                    # and reset the execution time
+                    # increase the execution time by one
+                    if check_if_ended(component, current_time):
+                        core.ready_queue.remove(component)
+                    component.current_execution += 1
+            current_time += self.advance_time(current_time)
 
+        for core in self.cores:
+            for component in core.components:
+                print(component.response_times)
+                for task in component.tasks:
+                    print(task.response_times)
 
-    def advance_time(self,current_time, ready_queue, components: list[Component]) -> int:
-        if len(ready_queue) < 1:
-            remainder = min([c.period - (current_time % c.period) for c in components])
-            return int(remainder)
-        return 1
+    def advance_time(self, current_time: int) -> int:
+        next_time = []
+        for core in self.cores:
+            if len(core.ready_queue) < 1:
+                remainder = min([c.period - (current_time % c.period) for c in core.components])
+                next_time.append(int(remainder))
+            else:
+                return 1
+        return min(next_time)
