@@ -14,6 +14,7 @@ class Task:
         self.current_start_time = 0
         # the list of response times of the task
         self.response_times = []
+        self.schedulable = True
 
     def __repr__(self):
         return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period} | Priority: {self.priority}"

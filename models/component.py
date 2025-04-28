@@ -13,8 +13,6 @@ class Component:
         self.current_execution = 0
         # the starting time of the current execution
         self.current_start_time = 0
-        # the list of response times of the component
-        self.response_times = []
 
 
     def __repr__(self):
