@@ -1,7 +1,8 @@
 from typing import cast
-from models import Core, Component, Task
+from models import Core, Component, Task, Solution
 from scheduler import schedule_object
-from math import floor 
+from math import floor
+from csv_functions import write_solutions_to_csv
 
 
 class Simulation:
@@ -41,16 +42,15 @@ class Simulation:
                 bool: Returns whether or not the operation was successfull
             """
             # select the comparing value based on the type of obj
-            comparing_value = obj.budget if type(obj) is Component else cast(Task, obj).wcet
+            comparing_value = obj.budget if type(
+                obj) is Component else cast(Task, obj).wcet
             # checks if we have reached the end of the execution
-            if obj.current_execution >  comparing_value:
+            if obj.current_execution > comparing_value:
                 if type(obj) is Task:
                     amounts_raised = current_time // obj.period
                     last_raise = amounts_raised * obj.period
                     response_time = current_time - last_raise
                     obj.response_times.append(response_time)
-                    print(
-                        f"Response time of {obj.task_name} is {response_time}")
                 # reset execution time and start time
                 obj.current_execution = 0
                 obj.current_start_time = 0
@@ -75,7 +75,6 @@ class Simulation:
         simulation_time *= simulation_time_factor
         current_time = 0
         while current_time < simulation_time:
-            print(f"Current time: {current_time}")
             for core in self.cores:
                 core.ready_queue += [t for t in core.components if current_time %
                                      t.period == 0]
@@ -103,13 +102,33 @@ class Simulation:
                         core.ready_queue.remove(component)
             current_time += self.advance_time(current_time)
 
+        # TODO: This needs to be its own function and maybe some comments
+        all_solutions = []
         for core in self.cores:
             for component in core.components:
-                print(component.component_id)
+                component_schedulable = 1
+                solutions = []
                 for task in component.tasks:
-                    print(task.task_name, task.response_times)
+                    task_schedulable = 0 if any(
+                        r >= task.period for r in task.response_times) else 1
+                    component_schedulable *= task_schedulable
+                    average_resonse_time = round(sum(
+                        task.response_times) / len(task.response_times))
+                    max_response_time = max(task.response_times)
+                    sol = Solution(task_name=task.task_name, component_id=component.component_id,
+                                   task_schedulable=task_schedulable, component_schedulable=0,
+                                   avg_response_time=average_resonse_time, max_response_time=max_response_time)
 
+                    solutions.append(sol)
+                for s in solutions:
+                    s.component_schedulable = component_schedulable
+                    all_solutions.append(s)
 
+        print(','.join(all_solutions[0].header()))
+        for asl in all_solutions:
+            print(asl)
+        
+        write_solutions_to_csv(solutions=all_solutions)
 
     def advance_time(self, current_time: int) -> int:
         next_time = []
