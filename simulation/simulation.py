@@ -67,8 +67,11 @@ class Simulation:
             for component in core.components:
                 component.tasks = schedule_object(
                     component.scheduler, component.tasks)
+                component.budget = floor(component.budget / core.speed_factor)
+                component.period = floor(component.period / core.speed_factor)
                 for task in component.tasks:
                     task.wcet = floor(task.wcet / core.speed_factor)
+                    task.period = floor(task.period / core.speed_factor) 
                     if task.period > simulation_time:
                         simulation_time = task.period
 
@@ -113,8 +116,9 @@ class Simulation:
                         r >= task.period for r in task.response_times) else 1
                     component_schedulable *= task_schedulable
                     average_resonse_time = round(sum(
-                        task.response_times) / len(task.response_times))
-                    max_response_time = max(task.response_times)
+                        task.response_times) / len(task.response_times)) if len(task.response_times) > 0 else -1
+                    max_response_time = max(task.response_times) if len(
+                        task.response_times) > 1 else -1
                     sol = Solution(task_name=task.task_name, component_id=component.component_id,
                                    task_schedulable=task_schedulable, component_schedulable=0,
                                    avg_response_time=average_resonse_time, max_response_time=max_response_time)
@@ -127,7 +131,7 @@ class Simulation:
         print(','.join(all_solutions[0].header()))
         for asl in all_solutions:
             print(asl)
-        
+
         write_solutions_to_csv(solutions=all_solutions)
 
     def advance_time(self, current_time: int) -> int:
