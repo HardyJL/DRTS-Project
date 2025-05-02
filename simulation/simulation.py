@@ -67,17 +67,16 @@ class Simulation:
             for component in core.components:
                 component.tasks = schedule_object(
                     component.scheduler, component.tasks)
-                component.budget = floor(component.budget / core.speed_factor)
-                component.period = floor(component.period / core.speed_factor)
                 for task in component.tasks:
-                    task.wcet = floor(task.wcet / core.speed_factor)
-                    task.period = floor(task.period / core.speed_factor) 
+                    task.wcet = task.wcet / core.speed_factor
                     if task.period > simulation_time:
                         simulation_time = task.period
 
         simulation_time *= simulation_time_factor
         current_time = 0
         while current_time < simulation_time:
+            print(current_time)
+            advance_increment = self.advance_time(current_time=current_time)
             for core in self.cores:
                 core.ready_queue += [t for t in core.components if current_time %
                                      t.period == 0]
@@ -94,16 +93,16 @@ class Simulation:
                         current_task: Component = schedule_object(
                             component.scheduler, component.ready_queue)[0]
                         check_if_started(current_task, current_time)
-                        current_task.current_execution += 1
+                        current_task.current_execution += advance_increment
                         if check_if_ended(current_task, current_time):
                             component.ready_queue.remove(current_task)
                     # if we have reached the end of the component we keep the response time
                     # and reset the execution time
                     # increase the execution time by one
-                    component.current_execution += 1
+                    component.current_execution += advance_increment    
                     if check_if_ended(component, current_time):
                         core.ready_queue.remove(component)
-            current_time += self.advance_time(current_time)
+            current_time += advance_increment
 
         # TODO: This needs to be its own function and maybe some comments
         all_solutions = []
@@ -112,13 +111,12 @@ class Simulation:
                 component_schedulable = 1
                 solutions = []
                 for task in component.tasks:
-                    task_schedulable = 0 if any(
-                        r >= task.period for r in task.response_times) else 1
+                    task_schedulable = 0 if any(r >= task.period for r in task.response_times) else 1
                     component_schedulable *= task_schedulable
                     average_resonse_time = round(sum(
-                        task.response_times) / len(task.response_times)) if len(task.response_times) > 0 else -1
+                        task.response_times) / len(task.response_times),2) if len(task.response_times) > 0 else -1
                     max_response_time = max(task.response_times) if len(
-                        task.response_times) > 1 else -1
+                        task.response_times) >= 1 else -1
                     sol = Solution(task_name=task.task_name, component_id=component.component_id,
                                    task_schedulable=task_schedulable, component_schedulable=0,
                                    avg_response_time=average_resonse_time, max_response_time=max_response_time)
@@ -138,13 +136,11 @@ class Simulation:
         next_time = []
         for core in self.cores:
             if len(core.ready_queue) < 1:
-                next_time.append(
-                    int(min([c.period - (current_time % c.period) for c in core.components])))
+                next_time.append((min([c.period - (current_time % c.period) for c in core.components])))
             else:
                 for component in core.components:
                     if len(component.ready_queue) < 1:
-                        next_time.append(
-                            int(min([c.period - (current_time % c.period) for c in component.tasks])))
+                        next_time.append(min([c.period - (current_time % c.period) for c in component.tasks]))
                     else:
-                        return 1
+                        return 1    
         return min(next_time)
