@@ -9,7 +9,7 @@ class Simulation:
     def __init__(self, cores: list[Core]):
         self.cores = cores
 
-    def simulate(self, simulation_time_factor: int) -> None:
+    def simulate(self, simulation_time_factor: int,file) -> None:
         """
         Function that simulates the given cores execution
         this returns nothing but creates a xml file which holds the values for average responste times and worst case response time
@@ -132,7 +132,7 @@ class Simulation:
         for asl in all_solutions:
             print(asl)
 
-        write_solutions_to_csv(solutions=all_solutions)
+        write_solutions_to_csv(solutions=all_solutions, filename=file)
 
     def advance_time(self, current_time: int) -> int:
         next_time = []

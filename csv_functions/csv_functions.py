@@ -18,7 +18,8 @@ def load_models_from_csv(filename: str, model_type: Type[T]) -> List[T]:
          exit(1)
      return models
 
-def write_solutions_to_csv(solutions: List[Solution], filename: str = "solution.csv") -> None:
+def write_solutions_to_csv(solutions: List[Solution], filename) -> None:
+    filename= ""+filename+"_solutions.csv"
     try:
         with open(filename, mode='w', newline='') as csvfile:
             writer = csv.writer(csvfile)
