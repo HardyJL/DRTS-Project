@@ -3,7 +3,7 @@ import os.path
 
 from csv_functions import load_models_from_csv
 from models import Task, Core, Component
-from Simulation import Simulation
+from simulation import Simulation
 
 
 def load_models(architectures, tasks, budgets):

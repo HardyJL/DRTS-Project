@@ -1,7 +1,6 @@
 from typing import cast
 from models import Core, Component, Task, Solution
 from scheduler import schedule_object
-from math import floor
 from csv_functions import write_solutions_to_csv
 
 
@@ -61,17 +60,7 @@ class Simulation:
         print("Simulating...")
         # Initialize the ready queue for each core
         # for each component in the ready queue inizialize the ready queue of tasks
-        simulation_time = 0
-        for core in self.cores:
-            core.components = schedule_object(core.scheduler, core.components)
-            for component in core.components:
-                component.tasks = schedule_object(
-                    component.scheduler, component.tasks)
-                for task in component.tasks:
-                    task.wcet = task.wcet / core.speed_factor
-                    if task.period > simulation_time:
-                        simulation_time = task.period
-
+        simulation_time = self.generate_core_components()
         simulation_time *= simulation_time_factor
         current_time = 0
         while current_time < simulation_time:
@@ -104,7 +93,35 @@ class Simulation:
                         core.ready_queue.remove(component)
             current_time += advance_increment
 
-        # TODO: This needs to be its own function and maybe some comments
+        self.generate_solutions(file=file)
+    
+    def generate_core_components(self) -> int:    
+        simulation_time = 0
+        for core in self.cores:
+            core.components = schedule_object(core.scheduler, core.components)
+            for component in core.components:
+                component.tasks = schedule_object(
+                    component.scheduler, component.tasks)
+                for task in component.tasks:
+                    task.wcet = task.wcet / core.speed_factor
+                    if task.period > simulation_time:
+                        simulation_time = task.period
+        return simulation_time
+
+    def advance_time(self, current_time: int) -> int:
+        next_time = []
+        for core in self.cores:
+            if len(core.ready_queue) < 1:
+                next_time.append((min([c.period - (current_time % c.period) for c in core.components])))
+            else:
+                for component in core.components:
+                    if len(component.ready_queue) < 1:
+                        next_time.append(min([c.period - (current_time % c.period) for c in component.tasks]))
+                    else:
+                        return 1    
+        return min(next_time)
+    
+    def generate_solutions(self, file: str):
         all_solutions = []
         for core in self.cores:
             for component in core.components:
@@ -130,17 +147,4 @@ class Simulation:
         for asl in all_solutions:
             print(asl)
 
-        write_solutions_to_csv(solutions=all_solutions, filename=file)
-
-    def advance_time(self, current_time: int) -> int:
-        next_time = []
-        for core in self.cores:
-            if len(core.ready_queue) < 1:
-                next_time.append((min([c.period - (current_time % c.period) for c in core.components])))
-            else:
-                for component in core.components:
-                    if len(component.ready_queue) < 1:
-                        next_time.append(min([c.period - (current_time % c.period) for c in component.tasks]))
-                    else:
-                        return 1    
-        return min(next_time)
+        write_solutions_to_csv(solutions=all_solutions, filename=file)  
