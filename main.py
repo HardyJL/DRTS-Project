@@ -40,7 +40,8 @@ def main():
     cores = load_models(architectures, tasks, budgets)
 
     simulator = Simulation(cores)
-    simulator.simulate(int(sys.argv[2]),str(sys.argv[1]))
+    simulator.test_simulate()
+    # simulator.simulate(int(sys.argv[2]),str(sys.argv[1]))
 
 
 if __name__ == "__main__":

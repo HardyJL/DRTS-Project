@@ -8,7 +8,7 @@ def schedule_object(scheduler: str, object_list: list[Task] | list[Component]) -
    Returns:
        list[Task] | list[Component]: the sorted list
    """
-   assert(scheduler == "EDF" or scheduler == "RM", "Incorrect Scheduler")
+   assert scheduler == "EDF" or scheduler == "RM", "Incorrect Scheduler"
    if scheduler == "RM":
        return sorted(object_list, key= lambda obj: obj.priority)
    return sorted(object_list, key= lambda obj: obj.period)

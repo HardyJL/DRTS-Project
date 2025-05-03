@@ -8,8 +8,7 @@ class Task:
             self.priority=None
         else:
             self.priority = float(priority)
-        # the current exection time of the task
-        self.current_execution = 0
+        self.remaining_time = float(wcet)
         # the starting time of the current execution
         self.current_start_time = 0
         # the list of response times of the task
@@ -19,3 +18,10 @@ class Task:
     def __repr__(self):
         return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period} | Priority: {self.priority}"
 
+    def __eq__(self, other):
+        assert isinstance(other, Task)
+        return self.period == other.period
+    
+    def __lt__(self, other): 
+        assert isinstance(other, Task)
+        return self.period < other.period

@@ -10,8 +10,8 @@
       "request": "launch",
       "program": "main.py",
       "console": "integratedTerminal",
-    //   "args": "Test-Cases/4-large-test-case 20"
-      "args": "Test-Cases/2-small-test-case 6"
+      "args": "Test-Cases/class-test-case 2"
+    //   "args": "Test-Cases/2-small-test-case 6"
     //   "args": "Test-Cases/1-tiny-test-case 3"
     }
   ]
