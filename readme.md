@@ -1,98 +1,123 @@
-# 02225 DRTS Project: ADAS Multicore Scheduling Simulation and Analysis
+# Readme for DRTS Project - Group 36
 
 ## Description
 
-This project involves developing a simulator and an analysis tool for an Advanced Driver-Assistance System (ADAS) running on a multicore platform with hierarchical scheduling.  The goal is to simulate system behavior and analyze schedulability to ensure tasks meet deadlines.
+This project simulates and analyzes the scheduling of an Advanced Driver-Assistance System (ADAS) on a multicore platform. It includes a simulator and an analysis tool to ensure tasks meet deadlines using hierarchical scheduling.
 
 ## Getting Started
 
 ### Prerequisites
 
-*   Python 3.x
-*   `pip` package installer
+- Python 3.x
+- `pip` package installer
 
 ### Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [repository-url]
-    cd [project-directory]
-    ```
+1. **Clone the repository:**
+   ```bash
+   git clone [repository-url]
+   cd [project-directory]
+   ```
 
-2.  **Create a virtual environment (recommended):**
-    ```bash
-    python3 -m venv venv
-    ```
+2. **Create a virtual environment (recommended):**
+   ```bash
+   python3 -m venv venv
+   ```
 
-3.  **Activate the virtual environment:**
-    *   **On Linux/macOS:**
-        ```bash
-        source venv/bin/activate
-        ```
-    *   **On Windows:**
-        ```bash
-        venv\Scripts\activate
-        ```
+3. **Activate the virtual environment:**
+   - **On Linux/macOS:**
+     ```bash
+     source venv/bin/activate
+     ```
+   - **On Windows:**
+     ```bash
+     venv\Scripts\activate
+     ```
 
-4.  **Install dependencies (if any, list them in `requirements.txt` later):**
-    ```bash
-    pip install -r requirements.txt # If you create a requirements.txt file
-    ```
+4. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ### Running the Project
 
-*   **Simulator:**  Run the simulator script using Python.
-    ```bash
-    python simulator/simulator.py [path/to/input_file.txt]
-    ```
-*   **Analysis Tool:** Run the analysis tool script using Python.
-    ```bash
-    python analysis_tool/analysis_tool.py [path/to/input_file.txt]
-    ```
-    *Replace `simulator/simulator.py`, `analysis_tool/analysis_tool.py`, and `[path/to/input_file.txt]` with the actual paths to your scripts and input files.*
+#### Simulator
+Run the simulator using the following command:
+```bash
+python main.py [path/to/test-case-folder] [simulation_time_factor]
+```
+- Example:
+  ```bash
+  python main.py Test-Cases/2-small-test-case 20
+  ```
 
-## Usage
+#### Debugging
+To debug the project, use the provided VS Code launch configuration:
+```json
+{
+  "name": "Python Debugger: Current File with Arguments",
+  "type": "debugpy",
+  "request": "launch",
+  "program": "main.py",
+  "console": "integratedTerminal",
+  "args": "Test-Cases/2-small-test-case 20"
+}
+```
 
-The project consists## Project Scope and Ideas: 02225 DRTS - ADAS Multicore Scheduling
+## Project Structure
 
-**Project Goal:**  To model, simulate, and analyze the real-time scheduling of an Advanced Driver-Assistance System (ADAS) on a multicore platform.  We aim to ensure the ADAS application, composed of critical and non-critical tasks, meets its timing requirements.
+- **`main.py`**: Entry point for the simulator.
+- **`models/`**: Contains core classes like `Task`, `Core`, `Component`, and `Solution`.
+- **`scheduler/`**: Implements scheduling algorithms (EDF, RM).
+- **`simulation/`**: Contains the `Simulation` class to simulate task execution.
+- **`csv_functions/`**: Handles loading models from CSV files.
+- **`Test-Cases/`**: Includes test cases in CSV format.
 
-**Key Project Ideas:**
+## Input File Format
 
-*   **Hierarchical Scheduling:** Implement and analyze a hierarchical scheduling approach on each core of a multicore system. This involves multiple levels of schedulers managing different types of tasks.
+### `tasks.csv`
+Defines tasks with the following columns:
+- `task_name`: Name of the task.
+- `wcet`: Worst-case execution time.
+- `period`: Task period.
+- `component_id`: Component ID.
+- `priority`: Task priority (for RM scheduling).
 
-*   **Bounded Delay Resource (BDR) Model:** Utilize the BDR model to abstract and manage resource allocation between different levels of the hierarchical scheduling system. This model helps in compositional analysis.
+### `architecture.csv`
+Defines the hardware platform:
+- `core_id`: Core identifier.
+- `speed_factor`: Core speed relative to nominal speed.
+- `scheduler`: Core-level scheduler (EDF or RM).
 
-*   **Task Types:**  Model the ADAS application using:
-    *   **Hard Periodic Tasks:** Representing critical functions with strict deadlines and fixed periods.
-    *   **Soft Sporadic Tasks:** Representing non-critical functions with minimum inter-arrival times and deadlines.
+### `budgets.csv`
+Defines component budgets and periods:
+- `component_id`: Component identifier.
+- `scheduler`: Component-level scheduler (EDF or RM).
+- `budget`: Resource allocation for the component.
+- `period`: Component period.
+- `core_id`: Core assignment.
 
-*   **Scheduling Algorithms:** Implement and analyze common real-time scheduling algorithms within the hierarchical framework:
-    *   **Earliest Deadline First (EDF):**  A dynamic priority scheduler.
-    *   **Fixed Priority Scheduling (FPS) with Rate Monotonic (RM):** A static priority scheduler and priority assignment policy.
+## Output
 
-*   **Simulator Development:** Build a simulator to mimic the execution of the ADAS tasks under the defined hierarchical scheduling system.  The simulator will use BDR resource supply and report task response times and resource utilization.
+The simulator outputs task response times and schedulability results in the following format:
+```csv
+task_name,component_id,task_schedulable,avg_response_time,max_response_time,component_schedulable
+Task_1,Component_1,1,10.0,15.0,1
+Task_2,Component_1,0,20.0,25.0,0
+```
 
-*   **Analysis Tool Development:** Create an analysis tool to perform schedulability analysis. This tool will:
-    *   Calculate BDR interface parameters for components based on their task workloads and scheduling algorithms.
-    *   Implement schedulability tests using Demand Bound Functions (DBF) and Supply Bound Functions (SBF).
-    *   Compare the results of the analysis with the simulator outputs.
+## Key Features
 
-*   **Compositional Analysis:** Apply compositional analysis techniques to analyze the hierarchical system's schedulability by considering resource demand and supply at each level.
+- **Hierarchical Scheduling**: Supports EDF and RM scheduling at both core and component levels.
+- **Simulation**: Simulates task execution and calculates response times.
+- **Analysis**: Performs schedulability analysis using demand and supply bound functions.
 
-**Potential Scope Extensions:**
+## Example Test Case
 
-*   Worst-Case Response Time (WCRT) calculation.
-*   Exploration of alternative resource models (PRM, EDP).
-*   Modeling and analysis of inter-task communication.
-*   Optimization of core assignments and resource model parameters.
-
-**Overall, the project focuses on applying real-time scheduling theory and simulation to a practical ADAS example using a hierarchical and compositional approach for multicore systems.** of two main components:
-
-*   **Simulator:** Simulates the execution of ADAS tasks on a multicore platform using hierarchical scheduling and BDR resource model. It reads input files describing the application, platform, and scheduling configurations. The simulator outputs task response times and resource utilization metrics.
-
-*   **Analysis Tool:**  Analyzes the schedulability of the ADAS task set. It calculates BDR interface parameters for components and performs schedulability analysis based on demand and supply bound functions. The tool reports schedulability results.
-
-Both tools use the same input file format to describe the system.  Refer to the project documentation or example input files for the input file structure.
-
-## Project Structure (Example - Adapt as needed)
+To run the simulator with a test case:
+1. Navigate to the `Test-Cases/` folder.
+2. Select a test case folder (e.g., `2-small-test-case`).
+3. Run the simulator:
+   ```bash
+   python main.py Test-Cases/2-small-test-case 20
+   ```

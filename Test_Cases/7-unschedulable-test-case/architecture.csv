@@ -1,5 +1,0 @@
-core_id,speed_factor,scheduler
-Core_1,1.14,EDF
-Core_2,0.9,EDF
-Core_3,0.8,RM
-Core_4,1.25,EDF

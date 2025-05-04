@@ -1,3 +1,0 @@
-component_id,scheduler,budget,period,core_id,priority
-Camera_Sensor,RM,4,7,Core_1,
-Image_Processor,EDF,5,16,Core_1,
