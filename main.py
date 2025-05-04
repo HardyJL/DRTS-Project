@@ -26,7 +26,7 @@ def load_models(architectures, tasks, budgets):
 
 def main():
     # check if the user has provided the path to the test folder
-    assert len(sys.argv) == 3 and sys.argv[1] != "" and sys.argv[1] != None
+    assert len(sys.argv) == 2 and sys.argv[1] != "" and sys.argv[1] != None
     # check if the expected path is correct
     expected_path = os.path.join(os.getcwd(), sys.argv[1])
     assert os.path.exists(
@@ -40,7 +40,7 @@ def main():
     cores = load_models(architectures, tasks, budgets)
 
     simulator = Simulation(cores)
-    simulator.test_simulate()
+    simulator.simulate(str(sys.argv[1]))
     # simulator.simulate(int(sys.argv[2]),str(sys.argv[1]))
 
 

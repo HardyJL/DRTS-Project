@@ -5,7 +5,7 @@ class Task:
         self.period = float(period)
         self.component_id = component_id
         if priority == "":
-            self.priority=None
+            self.priority = None
         else:
             self.priority = float(priority)
         self.remaining_time = float(wcet)
@@ -17,11 +17,3 @@ class Task:
 
     def __repr__(self):
         return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period} | Priority: {self.priority}"
-
-    def __eq__(self, other):
-        assert isinstance(other, Task)
-        return self.period == other.period
-    
-    def __lt__(self, other): 
-        assert isinstance(other, Task)
-        return self.period < other.period
