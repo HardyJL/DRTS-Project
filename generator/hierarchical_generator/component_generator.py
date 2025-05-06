@@ -77,7 +77,8 @@ class ComponentGenerator:
             for i in range(components_per_core[core_idx]):
                 # Choose a scheduler (if core is RM, all components must be RM or EDF)
                 if core["scheduler"] == "RM":
-                    scheduler = random.choice(["RM", "EDF"])
+                    # scheduler = random.choice(["RM", "EDF"])
+                    scheduler = "RM"
                 else:
                     scheduler = "EDF"  # If core is EDF, all components must be EDF
                 
