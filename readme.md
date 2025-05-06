@@ -70,6 +70,7 @@ To debug the project, use the provided VS Code launch configuration:
 - **`models/`**: Contains core classes like `Task`, `Core`, `Component`, and `Solution`.
 - **`scheduler/`**: Implements scheduling algorithms (EDF, RM).
 - **`simulation/`**: Contains the `Simulation` class to simulate task execution.
+- **`generator/`**: Contains an implementation for a hierarchical test case generator.
 - **`csv_functions/`**: Handles loading models from CSV files.
 - **`Test-Cases/`**: Includes test cases in CSV format.
 
@@ -111,6 +112,7 @@ Task_2,Component_1,0,20.0,25.0,0
 - **Hierarchical Scheduling**: Supports EDF and RM scheduling at both core and component levels.
 - **Simulation**: Simulates task execution and calculates response times.
 - **Analysis**: Performs schedulability analysis using demand and supply bound functions.
+- **Generation**: Generates a range of example test cases according to given parameters
 
 ## Example Test Case
 
