@@ -13,12 +13,11 @@ from models import Core, Component, Task, Solution
 #---------functions from main to help make analysis work - delete when everything works!!----------------
 from csv_functions import load_models_from_csv
 
-def load_models(architectures, tasks, budgets):
-    cores, tasks, components = load_models_from_csv(architectures, Core), load_models_from_csv(
-        tasks, Task), load_models_from_csv(budgets, Component)
-
-   # assert len(cores) > 0 and len(tasks) > 0 and len(
-    #    components) > 0, "No cores, tasks or components found in the csv files"
+def load_models(architectures, tasks, budgets, solutions_path):
+    cores = load_models_from_csv(architectures, Core)
+    tasks = load_models_from_csv(tasks, Task)
+    components = load_models_from_csv(budgets, Component)
+    solutions = load_models_from_csv(solutions_path, Solution)
 
     for component in components:
         component.tasks = [
@@ -27,11 +26,12 @@ def load_models(architectures, tasks, budgets):
     for core in cores:
         core.components = [
             component for component in components if component.core_id == core.core_id]
+        
+        # 💡 Assign solutions to core
+        #core.solutions = [
+        #    solution for solution in solutions if solution.component_id == component.component_id]
 
-    return cores
-
-
-
+    return cores, solutions
 
 
 
@@ -40,16 +40,16 @@ def analysis():
 
     #assert len(sys.argv) == 3 and sys.argv[1] != "" and sys.argv[1] != None
     # check if the expected path is correct
-    expected_path = r"C:\Users\Laurits\Documents\masters_degree\2nd_semester\Distributed_real_time_systems\DRTS_Project-Test-Cases\3-medium-test-case"
+    expected_path = r"C:\Users\Laurits\Documents\masters_degree\2nd_semester\Distributed_real_time_systems\Test-Cases\4-large-test-case"
     assert os.path.exists(
         expected_path), f"Path {expected_path} does not exist"
 
-    architectures, tasks, budgets = expected_path + \
-        "/architecture.csv", expected_path + "/tasks.csv", expected_path + "/budgets.csv"
+    architectures, tasks, budgets, solutions = expected_path + \
+        "/architecture.csv", expected_path + "/tasks.csv", expected_path + "/budgets.csv",  expected_path + "/_solutions.csv"
     assert os.path.exists(architectures) and os.path.exists(tasks) and os.path.exists(
         budgets), f"Path {architectures} or {tasks} or {budgets} does not exist"
 
-    cores = load_models(architectures, tasks, budgets)
+    cores, solutions1 = load_models(architectures, tasks, budgets, solutions)
 
 
 
@@ -102,7 +102,7 @@ def analysis():
 
 # ---------------- BDR model---------------------------------------------
 
-    def get_budget(input_core_id):
+    def get_budget_component(input_core_id):
         budget_entries = []
         for core in cores:
             for component in core.components:
@@ -110,7 +110,17 @@ def analysis():
                     budget_entries.append((component.component_id, component.budget))
         return budget_entries  
     
-    def get_periods(input):
+    def get_budget_task(input_component_id):
+        """getter for budget for task - the output is the budget from the component of the relating task becasue tasks dont contain budget"""
+        budget_task =  0
+        for i in cores:
+            for j in i.components:
+                if j.component_id == input_component_id:
+                    budget_task = j.budget
+        return budget_task
+
+
+    def get_periods_component(input):
         component_periods = []
         for i in cores:
             for j in i.components:
@@ -118,51 +128,131 @@ def analysis():
                     component_periods.append(j.period)
         return component_periods
         
+    def get_periods_tasks(input):
+        """input: the component of the tasks"""
+        task_periods = []
+        for i in cores:
+            for j in i.components:
+                if j.component_id == input:
+                    for task in j.tasks:
+                        task_periods.append(task.period)
+        return task_periods
     
+    
+    def calculate_task_srp1(input_component_id, input_core):
+        """calculates the srp model (Gamma, P) for each task on a given component"""
+        taskList = []
+        for core in cores:
+            for component in core.components:
+                if component.component_id == input_component_id:
+                    taskList = component.tasks
+        
+        
+        
+        maxTasks =  len(taskList)   #Max length will then be total times
+
+        totalAccess = 0 #The time you will have access. If so it has to be
+        partition_period = 0  #Get's time to know
+        for task in taskList:  #For access to every access
+            srp_gamma_component, srp_period_component = calculate_component_srp(input_core) #Calcualte the component
+
+        
+        totalAccess += srp_period_component
+
+        partition_period += totalAccess #Get the ammount of access for tasks
+
+        gamma = []
+
+        currentTime = 0
+
+        testValue = 0
+        checkPoint =0 #If the current time doesn't meet requirements then
+        for i in range(0,maxTasks):
+
+            print("Loop test")
+            testValue += 10
+            if checkPoint > (partition_period):
+                break
+            if (True):#Get a function that will be that you can access those SRP
+                component_start = currentTime
+                component_end = testValue
+                gamma.append((component_start, component_end)) #Append the results
+                currentTime = component_end#Change the time
+                checkPoint += i #Check value now
 
 
-    def calculate_component_srp(input_core_id):
+
+        return gamma, partition_period
+
+    def calculate_task_srp(component_id_input):
+        """calculates the srp model (Gamma, P) for each task on a given component"""
+
+        component_budget = 0
+        component_budget = get_budget_task(component_id_input)
+
+        task_periods = []
+        task_periods = get_periods_tasks(component_id_input)
+
+        partition_period = lcm(*map(int, task_periods))
+
+        task_periods_sorted = sorted(task_periods)  
+        
+        
+        gamma = {}
+        current_time = 0
+
+
+
+
+        for task_id in task_periods_sorted:
+            component_start = current_time                           #delete this out maybe and use result from simulator instead
+            component_end = component_start + component_budget
+            gamma[task_id] = (component_start, component_end)
+            current_time = component_end
+
+        return gamma, partition_period
+
+
+    def calculate_component_srp(core_id_input):
         """Calculates the SRP model (Gamma, P) for each component on a given core."""
 
+        
+
         core_budgets = []
-        core_budgets = get_budget(input_core_id)
+        core_budgets = get_budget_component(core_id_input)
 
         
         component_periods = []
-        component_periods = get_periods(input_core_id)
+        component_periods = get_periods_component(core_id_input)
        
 
 
         partition_period = lcm(*map(int, component_periods))
         
-        print("partion_period")
-        print(partition_period)
-
+        #print("partion_period")
+        #print(partition_period)
+        
 
         #Sort by budget amount to allocate correct
         core_budgets_sorted = sorted(core_budgets, key=lambda x: x[1])  
-        print("core budgets sorted")
-        print(core_budgets_sorted)
+        #print("core budgets sorted")
+        #print(core_budgets_sorted)
 
         # 2. Allocate time proportional to budget - TDMA approach
         gamma = {}
         current_time = 0
 
         for component_id, budget in core_budgets_sorted:
-            component_start = current_time
+            component_start = current_time                           #delete this out maybe and use result from simulator instead
             component_end = component_start + budget
             gamma[component_id] = (component_start, component_end)
             current_time = component_end
 
         return gamma, partition_period
-
+    
 
     
-    #gamma1, partion1 = calculate_component_srp("Core_1")
-    #print(f"gamma: {gamma1}")
-    #print(f"partion_period: {partion1}")
-    
-    def calculate_availability_factor(srp_gamma: list, srp_period: int):
+    def calculate_availability_factor(srp_gamma, srp_period: int):
         """Calculates the availability factor (alpha) for a given SRP model."""
         total_available_time = 0
         for key, value in srp_gamma.items():
@@ -170,6 +260,15 @@ def analysis():
         alpha = total_available_time / srp_period
         return alpha
     
+    def calculate_availability_factor2(srp_gamma, srp_period: int):
+        """Calculates the availability factor (alpha) for a given SRP model."""
+        total_available_time = 0
+        for interval in srp_gamma:  # srp_gamma is a list of (start, end)
+            total_available_time += interval[1] - interval[0]
+        alpha = total_available_time / srp_period
+        return alpha
+
+
     def calculate_availability_factor1(srp_gamma: list, srp_period: int):
         """Calculates the availability factor (alpha) for a given SRP model."""
         total_available_time = 0
@@ -182,11 +281,51 @@ def analysis():
             total_available_time += end - start
         return total_available_time / srp_period
 
+    # use solution ordering for this
     
-    def partition_delay(srp_gamma: list, srp_period: int):
-        """estimate of partition delay - so far assume it's 0. the 
-        the partition delay equals δ for any t0 to t where: (t0 ≥ 0,t ≥ 0), (t - δ) x α(R) ≤ sft0 (R,t) ≤ (t +δ)x α(R). """
-        return 0
+    #for i in solutions1:
+    #    print(i)
+
+         
+    def partition_delay(srp_gamma, srp_period, input_core, input_component):
+        """Estimates the partition delay based on the solutions dataset and SRP parameters."""
+
+        alpha = calculate_availability_factor(srp_gamma,srp_period)
+        
+        #Get values from the srp gamma
+        gamma_values = list(srp_gamma.values())
+
+        #Worst case is the worst WCET of task times 2
+        gammaValue = max( [y-x for x, y in gamma_values]) #Maximum of 2 for best to 5
+
+        #We assume the amount of time it needs to reach
+        amountOfTime = []
+        for core in input_core:
+            for solu in solutions1:
+
+                if solu.component_id == input_component:
+                    amountOfTime = [solu.avg_response_time]
+
+        
+                
+        # If there are no tasks, delay is 0
+        if (len(tasks) == 0):
+            delay = 0
+        #print(amountOfTime[0])
+        #Calculate the delays
+        delay = (alpha*srp_period)/ amountOfTime[0]
+
+        #If it overbounds
+        if (alpha*srp_period) <= gammaValue:
+            delay = 0
+        if (len(tasks) != 0): #If not empty
+            
+            return delay
+        #print("component")
+        return 0 #No tasks = 0 delay
+
+    #def theorem1(rescource_partition_group):
+
     
 
 
@@ -194,67 +333,180 @@ def analysis():
         """Analyzes the BDR model for each core."""
 
         for core in input_cores:
-            print(f"\nBDR Analysis for Core: {core.core_id}")
+            
 
-            srp_gamma, srp_period = calculate_component_srp(core.core_id)
+            srp_gamma_component, srp_period_component = calculate_component_srp(core.core_id)
 
-            print(f"  SRP Gamma: {srp_gamma}")
-            print(f"  SRP Period: {srp_period}")
+            
 
-            alpha = calculate_availability_factor(srp_gamma, srp_period)
+            alpha_component = calculate_availability_factor(srp_gamma_component, srp_period_component)
             # The next line will now return 0 as it is not used
-            delta = partition_delay(srp_gamma, srp_period)
+            #delta = partition_delay(srp_gamma, srp_period)
 
-            print(f"  Availability Factor (alpha): {alpha}")
-            print(f"  Partition Delay (delta): {delta}")
-            srp_string_values = ""
-            #Print the value of all the SRP's
-            if (len(srp_gamma) != 0):
-                print("The values for each of the SPR's:")
-                for key, value in srp_gamma.items():
-                    srp_string_values += key +":"+str(value)+","
-                print(srp_string_values[:-1])
 
-    # Get tasks local to each component
+
+
+            # Get tasks local to each component
             for component in core.components:
                 component_tasks = component.tasks
+
+
+                
+
+                print(f"\nBDR Analysis for Core: {core.core_id}")
+                print(f"  SRP Gamma: {srp_gamma_component}")
+                print(f"  SRP Period: {srp_period_component}")
+                print(f"  ----- Availability Factor (alpha): {alpha_component}")
+                #print(f"  Partition Delay (delta): {delta}")
+                srp_string_values = ""
+                #Print the value of all the SRP's
+                if (len(srp_gamma_component) != 0):
+                    print("The values for each of the SPR's:")
+                    for key, value in srp_gamma_component.items():
+                        srp_string_values += key +":"+str(value)+","
+                    print(srp_string_values[:-1])
+
+
+                
+
+
                 print(f"\n  Component: {component.component_id}, Scheduler: {core.scheduler}")
 
-                # EDF Schedulability Test
-                if core.scheduler == "EDF":
-                    if component_tasks:
-                        is_schedulable = True
-                        for t in range(1, srp_period + 1):  # Test up to the period
-                            demand = dbf_EDF_implicit(t, component_tasks)
-                            if demand > alpha * t:
-                                is_schedulable = False
-                                break
-                        print(f"    EDF Schedulability: {'YES' if is_schedulable else 'NO'}")
-                    else:
-                        print("    No tasks for this component.")
 
-                # RM Schedulability Test
-                elif core.scheduler == "RM":
-                    if component_tasks:
-                         is_schedulable = True
-                         for i in range(len(component_tasks)):
-                            response_time = dbf_RM_implicit(T(i,component_tasks),i,component_tasks)
-                            
-                            if response_time > T(i,component_tasks):
-                                is_schedulable = False
+                
+                # the delay for the component(the parent partition)
+                delay_component = partition_delay(srp_gamma_component, srp_period_component, input_cores, component.component_id)
+                print(f"---- this is the partition delay {delay_component}")
 
-                                break
-                                
-                         print(f"    RM Schedulability: {'YES' if is_schedulable else 'NO'}")
+
+                
+
+
+               
+                
+
+
+                # THIS PART IS COMMENTED OUT BUT THIS PART IS THE ONE THAT SHOULD WORK - IVE JUST NOT FINISHED THE DEBUGGING OF IT..   THE OTHER VERSION DOWN BELOW KINDA WORKS BUT IS INCORRECT
+
+                # # #rescource partition group (rpg)
+                # # rpg = []
+                
+                # # alpha = []
+                # # delay = []
+                # # srp_gamma_tasks, srp_period_tasks= calculate_task_srp1(component.component_id, core)
+                
+                # # for task in srp_gamma_tasks:
+                # #     #calculate srp, availability factor and partition delay for task (child)
+                # #     #srp_gamma_task, srp_period_task= calculate_task_srp(component.component_id)
+                # #     alpha_task = calculate_availability_factor2(srp_gamma_tasks, srp_period_tasks)
+                # #     delay_task = partition_delay(srp_gamma_tasks, srp_period_tasks, input_cores, component.component_id)
+
+                # #     rpg.append((task, alpha_task, delay_task))
+                
+
+
+                    
+                # #     alpha.append(alpha_task)
+                # #     delay.append(delay_task)
+
+                
+                # # gamma1, alpha1, delay1 = rpg[1]
+                # # print(f"this is gamma-child {gamma1}\n this is alpha-child {alpha1}\n this is delay-child {delay1}")
+                
+                # # #schedulability test by therorem 1:
+                
+
+                # # gamma1, alpha1, delay1 = rpg[1]
+
+                # # sum_alpha = sum(alpha)
+                # # sum_delay = sum(delay)
+
+                # # if len(rpg) > 0 : #To check if a component
+                    
+                # #     if (sum_alpha < alpha_component) : #If the results are all true
+                # #         is_Schedulable = False #Default is false and check that for test
+
+                # #         for result in delay: #Iteratre and run through 
+                # #             if  result > delay_component: #If they all meet this constraint we can sched
+                # #                 is_Schedulable = True #Set to say that all the conditions are good.
+
+                # #         if is_Schedulable: #State if good or not
+                # #             print("Scheduability from theorem 1: YES!")
+                # #         else:
+                # #             print("Scheduability from theorem 1: NO!")
+                # #     else:
+                # #         print("Scheduability from theorem 1: NO!")
+
+
+
+
+
+
+
+
+
+                # WHEN THE ABOVE VERSION WORKS, COMMENT/DELETE THIS VERSION.
+
+                #rescource partition group (rpg)
+                rpg = []
+                
+                alpha = []
+                delay = []
+                
+                
+                for task in component.tasks:
+                    #calculate srp, availability factor and partition delay for task (child)
+                    srp_gamma_task, srp_period_task= calculate_task_srp(component.component_id)
+                    alpha_task = calculate_availability_factor(srp_gamma_task, srp_period_task)
+                    delay_task = partition_delay(srp_gamma_task, srp_period_task, input_cores, component.component_id)
+
+                    rpg.append((srp_gamma_task, alpha_task, delay_task))
+                
+
+
+                    
+                    alpha.append(alpha_task)
+                    delay.append(delay_task)
+
+                
+                gamma1, alpha1, delay1 = rpg[1]
+                print(f"this is gamma-child {gamma1}\n this is alpha-child {alpha1}\n this is delay-child {delay1}")
+                
+                #schedulability test by therorem 1:
+                
+
+                gamma1, alpha1, delay1 = rpg[1]
+
+                sum_alpha = sum(alpha)
+                sum_delay = sum(delay)
+
+                if len(rpg) > 0 : #To check if a component
+                    
+                    if (sum_alpha < alpha_component) : #If the results are all true
+                        is_Schedulable = False #Default is false and check that for test
+
+                        for result in delay: #Iteratre and run through 
+                            if  result > delay_component: #If they all meet this constraint we can sched
+                                is_Schedulable = True #Set to say that all the conditions are good.
+
+                        if is_Schedulable: #State if good or not
+                            print("Scheduability from theorem 1: YES!")
+                        else:
+                            print("Scheduability from theorem 1: NO!")
                     else:
-                        print("    No tasks for this component.")
+                        print("Scheduability from theorem 1: NO!")
+
+
+
+
+
+
 
 
 
 
     analyze_bdr_model(cores)
-
-
+    
 
     #extra thing for visualisation
     #print(f"Number of tasks: {len(all_tasks)}")
@@ -267,7 +519,7 @@ def analysis():
 
 
 # ----------TODO-----------
-"""     * find out how to calculate partition delay 
+"""     * change calculate srp so that it can do it for both components and tasks - right now it can only do components then do the same for partition-delay
         * implement theorem 1 and 2
         * clean up code and make sure that the input for analysis is the same as for simulation"""
 
