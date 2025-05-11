@@ -296,33 +296,47 @@ class BDRModel:
         is_schedulable = self.is_schedulable_edf_workload(tasks)
         return {task.task_name: is_schedulable for task in tasks}
     
+    # @staticmethod
+    # def check_theorem1_schedulability(parent_bdr: 'BDRModel', children_bdr: List['BDRModel']) -> bool:
+    #     """
+    #     Check schedulability based on Theorem 1 from Section 3.3.3.
+        
+    #     Args:
+    #         parent_bdr: The parent BDR model
+    #         children_bdr: List of child BDR models
+            
+    #     Returns:
+    #         True if schedulable according to Theorem 1, False otherwise
+    #     """
+    #     # Check sum of availability factors
+    #     total_alpha = sum(child.alpha for child in children_bdr)
+    #     if total_alpha > parent_bdr.alpha:
+    #         return False
+        
+    #     # Check each partition delay
+    #     for child in children_bdr:
+    #         # Special case: If both parent and child have Δ = 0, consider it valid
+    #         # This happens when both have full resource availability (α = 1.0)
+    #         if child.delta == 0 and parent_bdr.delta == 0:
+    #             continue
+                
+    #         if child.delta <= parent_bdr.delta:
+    #             return False
+        
+    #     return True
+
     @staticmethod
     def check_theorem1_schedulability(parent_bdr: 'BDRModel', children_bdr: List['BDRModel']) -> bool:
-        """
-        Check schedulability based on Theorem 1 from Section 3.3.3.
-        
-        Args:
-            parent_bdr: The parent BDR model
-            children_bdr: List of child BDR models
-            
-        Returns:
-            True if schedulable according to Theorem 1, False otherwise
-        """
         # Check sum of availability factors
         total_alpha = sum(child.alpha for child in children_bdr)
         if total_alpha > parent_bdr.alpha:
             return False
-        
-        # Check each partition delay
+
+        # NEW Strict check for each partition delay
         for child in children_bdr:
-            # Special case: If both parent and child have Δ = 0, consider it valid
-            # This happens when both have full resource availability (α = 1.0)
-            if child.delta == 0 and parent_bdr.delta == 0:
-                continue
-                
-            if child.delta <= parent_bdr.delta:
+            if child.delta <= parent_bdr.delta: # Must be strictly child.delta > parent_bdr.delta
                 return False
-        
+
         return True
     
     def __str__(self) -> str:
