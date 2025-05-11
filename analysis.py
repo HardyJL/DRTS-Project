@@ -38,9 +38,10 @@ def load_models(architectures, tasks, budgets, solutions_path):
 
 def analysis():
 
-    #assert len(sys.argv) == 3 and sys.argv[1] != "" and sys.argv[1] != None
+    assert len(sys.argv) == 2 and sys.argv[1] != "" and sys.argv[1] != None
+    expected_path = os.path.join(os.getcwd(), sys.argv[1])
     # check if the expected path is correct
-    expected_path = r"C:\Users\Laurits\Documents\masters_degree\2nd_semester\Distributed_real_time_systems\Test-Cases\4-large-test-case"
+    # expected_path = r"/mnt/D/Egyetem/MSem2_2025/Dist_RTS/DRTS-Project/Test-Cases/4-large-test-case"
     assert os.path.exists(
         expected_path), f"Path {expected_path} does not exist"
 
@@ -180,8 +181,6 @@ def analysis():
                 currentTime = component_end#Change the time
                 checkPoint += i #Check value now
 
-
-
         return gamma, partition_period
 
     def calculate_task_srp(component_id_input):
@@ -255,9 +254,16 @@ def analysis():
     def calculate_availability_factor(srp_gamma, srp_period: int):
         """Calculates the availability factor (alpha) for a given SRP model."""
         total_available_time = 0
-        for key, value in srp_gamma.items():
-            total_available_time += value[1]-value[0]
+        # print(srp_gamma)
+        """Handle tuples with different formats"""
+        try:
+            for key, value in srp_gamma.items():
+                total_available_time += value[1]-value[0]
+        except AttributeError:
+            for value in srp_gamma:
+                total_available_time += value[1]-value[0]
         alpha = total_available_time / srp_period
+        
         return alpha
     
     def calculate_availability_factor2(srp_gamma, srp_period: int):
@@ -293,7 +299,14 @@ def analysis():
         alpha = calculate_availability_factor(srp_gamma,srp_period)
         
         #Get values from the srp gamma
-        gamma_values = list(srp_gamma.values())
+        # print("***Debug***")
+        # print(srp_gamma)
+
+        """Handle tuples with different formats"""
+        try:
+            gamma_values = list(srp_gamma.values())
+        except AttributeError:
+            gamma_values = srp_gamma
 
         #Worst case is the worst WCET of task times 2
         gammaValue = max( [y-x for x, y in gamma_values]) #Maximum of 2 for best to 5
@@ -306,23 +319,22 @@ def analysis():
                 if solu.component_id == input_component:
                     amountOfTime = [solu.avg_response_time]
 
-        
-                
+        #Calculate the delays
+        delay = (alpha*srp_period)/ amountOfTime[0]
+
         # If there are no tasks, delay is 0
         if (len(tasks) == 0):
             delay = 0
         #print(amountOfTime[0])
-        #Calculate the delays
-        delay = (alpha*srp_period)/ amountOfTime[0]
 
         #If it overbounds
         if (alpha*srp_period) <= gammaValue:
             delay = 0
-        if (len(tasks) != 0): #If not empty
+        # if (len(tasks) != 0): #If not empty
             
-            return delay
+        #     return delay
         #print("component")
-        return 0 #No tasks = 0 delay
+        return delay #No tasks = 0 delay
 
     #def theorem1(rescource_partition_group):
 
@@ -388,54 +400,54 @@ def analysis():
 
                 # THIS PART IS COMMENTED OUT BUT THIS PART IS THE ONE THAT SHOULD WORK - IVE JUST NOT FINISHED THE DEBUGGING OF IT..   THE OTHER VERSION DOWN BELOW KINDA WORKS BUT IS INCORRECT
 
-                # # #rescource partition group (rpg)
-                # # rpg = []
+                #rescource partition group (rpg)
+                rpg = []
                 
-                # # alpha = []
-                # # delay = []
-                # # srp_gamma_tasks, srp_period_tasks= calculate_task_srp1(component.component_id, core)
+                alpha = []
+                delay = []
+                srp_gamma_tasks, srp_period_tasks= calculate_task_srp1(component.component_id, core)
                 
-                # # for task in srp_gamma_tasks:
-                # #     #calculate srp, availability factor and partition delay for task (child)
-                # #     #srp_gamma_task, srp_period_task= calculate_task_srp(component.component_id)
-                # #     alpha_task = calculate_availability_factor2(srp_gamma_tasks, srp_period_tasks)
-                # #     delay_task = partition_delay(srp_gamma_tasks, srp_period_tasks, input_cores, component.component_id)
+                for task in srp_gamma_tasks:
+                    #calculate srp, availability factor and partition delay for task (child)
+                    #srp_gamma_task, srp_period_task= calculate_task_srp(component.component_id)
+                    alpha_task = calculate_availability_factor2(srp_gamma_tasks, srp_period_tasks)
+                    delay_task = partition_delay(srp_gamma_tasks, srp_period_tasks, input_cores, component.component_id)
 
-                # #     rpg.append((task, alpha_task, delay_task))
+                    rpg.append((task, alpha_task, delay_task))
                 
 
 
                     
-                # #     alpha.append(alpha_task)
-                # #     delay.append(delay_task)
+                    alpha.append(alpha_task)
+                    delay.append(delay_task)
 
                 
-                # # gamma1, alpha1, delay1 = rpg[1]
-                # # print(f"this is gamma-child {gamma1}\n this is alpha-child {alpha1}\n this is delay-child {delay1}")
+                gamma1, alpha1, delay1 = rpg[1]
+                print(f"this is gamma-child {gamma1}\n this is alpha-child {alpha1}\n this is delay-child {delay1}")
                 
-                # # #schedulability test by therorem 1:
+                #schedulability test by therorem 1:
                 
 
-                # # gamma1, alpha1, delay1 = rpg[1]
+                gamma1, alpha1, delay1 = rpg[1]
 
-                # # sum_alpha = sum(alpha)
-                # # sum_delay = sum(delay)
+                sum_alpha = sum(alpha)
+                sum_delay = sum(delay)
 
-                # # if len(rpg) > 0 : #To check if a component
+                if len(rpg) > 0 : #To check if a component
                     
-                # #     if (sum_alpha < alpha_component) : #If the results are all true
-                # #         is_Schedulable = False #Default is false and check that for test
+                    if (sum_alpha < alpha_component) : #If the results are all true
+                        is_Schedulable = False #Default is false and check that for test
 
-                # #         for result in delay: #Iteratre and run through 
-                # #             if  result > delay_component: #If they all meet this constraint we can sched
-                # #                 is_Schedulable = True #Set to say that all the conditions are good.
+                        for result in delay: #Iteratre and run through 
+                            if  result > delay_component: #If they all meet this constraint we can sched
+                                is_Schedulable = True #Set to say that all the conditions are good.
 
-                # #         if is_Schedulable: #State if good or not
-                # #             print("Scheduability from theorem 1: YES!")
-                # #         else:
-                # #             print("Scheduability from theorem 1: NO!")
-                # #     else:
-                # #         print("Scheduability from theorem 1: NO!")
+                        if is_Schedulable: #State if good or not
+                            print("Scheduability from theorem 1: YES!")
+                        else:
+                            print("Scheduability from theorem 1: NO!")
+                    else:
+                        print("Scheduability from theorem 1: NO!")
 
 
 
@@ -448,6 +460,7 @@ def analysis():
                 # WHEN THE ABOVE VERSION WORKS, COMMENT/DELETE THIS VERSION.
 
                 #rescource partition group (rpg)
+                """
                 rpg = []
                 
                 alpha = []
@@ -494,8 +507,8 @@ def analysis():
                         else:
                             print("Scheduability from theorem 1: NO!")
                     else:
-                        print("Scheduability from theorem 1: NO!")
-
+                        print("Scheduability from theorem 1: NO!")"""
+                        
 
 
 
