@@ -6,6 +6,9 @@ from typing import List, Dict, Tuple, Optional, Union, Any
 from functools import reduce
 from core import Core, Component, Task, Solution
 from csv_functions import load_models_from_csv, write_solutions_to_csv, lcm_of_list
+
+# Define the Bounded Delay Resource (BDR) model
+# This model is used for hierarchical scheduling analysis.
 class BDRModel:
     """
     Implementation of the Bounded Delay Resource (BDR) model for hierarchical scheduling.
