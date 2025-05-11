@@ -30,7 +30,7 @@ def main():
         np.random.seed(config.seed)
     
     # Print configuration
-    config.print_configuration()
+    config.print_config()
     
     # Convert utilization from percentage to fraction
     utilization = config.utilization / 100.0

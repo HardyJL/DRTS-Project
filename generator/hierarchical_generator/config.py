@@ -23,7 +23,7 @@ class Config:
         self.schedulable = True
         self.seed = None
 
-        self.print_config()
+        
 
     @staticmethod
     def parse_arguments() -> 'Config':
