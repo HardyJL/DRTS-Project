@@ -41,7 +41,7 @@ def analysis():
     assert len(sys.argv) == 2 and sys.argv[1] != "" and sys.argv[1] != None
     expected_path = os.path.join(os.getcwd(), sys.argv[1])
     # check if the expected path is correct
-    # expected_path = r"/mnt/D/Egyetem/MSem2_2025/Dist_RTS/DRTS-Project/Test-Cases/4-large-test-case"
+    # expected_path = r"C:\Users\Laurits\Documents\masters_degree\2nd_semester\Distributed_real_time_systems\Test-Cases\4-large-test-case"
     assert os.path.exists(
         expected_path), f"Path {expected_path} does not exist"
 
@@ -428,10 +428,9 @@ def analysis():
                 #schedulability test by therorem 1:
                 
 
-                gamma1, alpha1, delay1 = rpg[1]
-
                 sum_alpha = sum(alpha)
                 sum_delay = sum(delay)
+                print(alpha, sum_alpha)
 
                 if len(rpg) > 0 : #To check if a component
                     
