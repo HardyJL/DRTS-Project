@@ -145,7 +145,7 @@ class ComponentGenerator:
                 priority = ""
                 if core["scheduler"] == "RM": # Priority of the *component* on the core
                     # This needs to be determined relative to other components on the same core
-                    # For now, placeholder; this should be set after all components for a core are known
+                    # This should be set after all components for a core are known
                     pass # Will be set later
 
                 component = {
