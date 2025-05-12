@@ -1,6 +1,6 @@
 import math
 from typing import List, Dict, Tuple, Optional, Union, Any
-from core import Core, Component, Task, Solution
+from .core import Core, Component, Task, Solution
 
 # Define the Bounded Delay Resource (BDR) model
 # This model is used for hierarchical scheduling analysis.
