@@ -29,7 +29,6 @@ class Config:
         self.server_budget_factor_range = (0.1, 0.3) # Server budget as 10-30% of server period
                                                     # This implies server utilization of 0.1 to 0.3
 
-        # self.print_config() # Call this after parsing or if using default
 
     @staticmethod
     def parse_arguments() -> 'Config':
