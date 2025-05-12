@@ -28,9 +28,12 @@ def randfixedsum(n: int, u: float, nsets: int = 1, minval: float = 0.001, maxval
     # Scale the sum to [0, n]
     s = u
     
-    if s > n * maxval or s < n * minval:
-        raise ValueError(f"Sum {s} is outside the feasible range [{n * minval}, {n * maxval}]")
-    
+    # Temporarily remove the minval and maxval constraints for generating varied test cases
+    # if s > n * maxval or s < n * minval:
+    #     raise ValueError(f"Sum {s} is outside the feasible range [{n * minval}, {n * maxval}]")
+
+
+
     # Generate random points in the simplex
     t = np.random.random((nsets, n-1))
     t = np.sort(t, axis=1)
