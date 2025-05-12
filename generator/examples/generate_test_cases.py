@@ -109,9 +109,6 @@ def main():
         schedulable=False,
         speed_range=(1.0, 1.0),
         seed=790
-        # After generation, you might still want to manually check/tweak budgets.csv 
-        # to ensure core budget (implicitly 1.0*CorePeriod) is less than sum of component demands
-        # or that component budgets are too small for their assigned tasks.
     )
 
 
@@ -146,10 +143,6 @@ def main():
         schedulable=False,
         speed_range=(1.0, 1.0),
         seed=102
-        # Note: After generation, inspect tasks.csv. If needed, manually adjust one task
-        # in the RM component to have a very small period and a WCET that consumes
-        # a large fraction of that period, to starve lower-priority tasks.
-        # The component's scheduler should be RM. Modify budgets.csv if necessary.
     )
     # Why: Tests the RM schedulability analysis, especially the interference calculation.
     #      Your `analysis.py` `is_schedulable_rm_task` should identify this.
@@ -170,23 +163,6 @@ def main():
         schedulable=False, # The goal is that the *analysis* finds this unschedulable due to BDR rules
         speed_range=(1.0, 1.0),
         seed=103
-        # How to encourage this:
-        # - Give the child component tasks with short periods/deadlines.
-        # - The analysis tool should derive a small delta for this child.
-        # - If the core itself (parent_bdr) is considered to have delta=0 (ideal),
-        #   and the child derives delta_C > 0, it should be fine.
-        # - The tricky part is forcing the child's *required* delta to be problematic
-        #   relative to a *non-zero* parent delta, or forcing the parent to have a larger delta
-        #   than the child needs.
-        # This specific scenario is harder to guarantee with generic generator flags and
-        # might be better constructed by:
-        #   a) Generating a base case.
-        #   b) Running your analysis tool to see the derived (alpha, delta) for the component.
-        #   c) Manually setting the parent core's (or a higher-level component's)
-        #      effective BDR in your analysis logic to have a delta that violates Theorem 1
-        #      (e.g., parent_delta >= child_delta, or child_delta_required < parent_delta_available).
-        #      Or, manually edit budgets.csv for the *parent* if it were a component,
-        #      giving it a (Q,P) pair that results in a large delta_parent.
     )
     # Why: Tests the hierarchical composition aspect (Theorem 1 in your `analysis.py`).
     #      Specifically, `child.delta > parent_bdr.delta` must hold.
@@ -202,14 +178,7 @@ def main():
         schedulable=False, # Target is unschedulable due to alpha sum
         speed_range=(1.0, 1.0),
         seed=104
-        # How to encourage this:
-        # - The generator assigns tasks to components.
-        # - Your analysis tool calculates (alpha_C, delta_C) for each component.
-        # - The sum of alpha_C for components on the core might naturally exceed the
-        #   core's alpha (which is 1.0) if the total task load is high enough.
-        # - If the parent is another component (not a core), its alpha_P could be < 1.0.
-        #   Set `utilization` high enough that child components collectively demand more
-        #   than the parent can supply.
+
     )
     # Why: Tests Theorem 1: sum of child alphas <= parent_alpha.
 
@@ -225,15 +194,6 @@ def main():
         schedulable=False, # But can't be scheduled by a constrained parent
         speed_range=(1.0, 1.0),
         seed=105
-        # To achieve this:
-        # 1. Generate the case.
-        # 2. In your analysis tool or test script, when analyzing this component,
-        #    manually define a `parent_bdr` for the core that has a very restrictive
-        #    alpha (e.g., 0.2) or a delta that the component's derived delta cannot satisfy.
-        #    For instance, if the component derives (alpha=0.5, delta=20),
-        #    and you test it against parent_bdr = BDRModel(alpha=0.2, delta=5),
-        #    it will fail on alpha. 
-        #    If parent_bdr = BDRModel(alpha=0.6, delta=30), it will fail on delta (20 not > 30).
     )
     # Why: Tests the interaction between component-level BDR derivation and
     #      parent-level schedulability according to Theorem 1.
