@@ -70,7 +70,7 @@ To debug the project, use the provided VS Code launch configuration:
 - **`models/`**: Contains core classes like `Task`, `Core`, `Component`, and `Solution`.
 - **`scheduler/`**: Implements scheduling algorithms (EDF, RM).
 - **`simulation/`**: Contains the `Simulation` class to simulate task execution.
-- **`generator/`**: Contains an implementation for a hierarchical test case generator.
+- **`generator/`**: Contains an implementation for a hierarchical test case generator. Usage of the generator is documented within the readme in the generator folder.
 - **`csv_functions/`**: Handles loading models from CSV files.
 - **`Test-Cases/`**: Includes test cases in CSV format.
 
