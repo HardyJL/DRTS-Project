@@ -1,4 +1,4 @@
-from typing import List, Optional, Union # Ensure Optional is imported
+from typing import List, Optional, Union 
 
 class Task:
     def __init__(self, task_name: str,
@@ -58,6 +58,8 @@ class Task:
     def __repr__(self):
         return (f"Task(name={self.task_name}, type={self.task_type}, wcet={self.wcet:.2f} (orig: {self.original_wcet:.2f}), "
                 f"period/MIT={self.period}, deadline={self.deadline}, prio={self.priority}, comp={self.component_id})")
+
+
 class Component:
     def __init__(self, component_id: str, scheduler: str,
                  budget: Union[str, float],
@@ -92,7 +94,7 @@ class Component:
                 f"core={self.core_id}, prio={self.priority}, server_budget={self.server_budget}, server_period={self.server_period})")
 
 
-class Core: # Assuming Core class is also in this file or imported
+class Core:
     def __init__(self, core_id: str, speed_factor: str, scheduler: str):
         self.core_id = core_id
         self.speed_factor = float(speed_factor)
@@ -102,7 +104,7 @@ class Core: # Assuming Core class is also in this file or imported
     def __repr__(self):
         return (f"Core(id={self.core_id}, speed={self.speed_factor}, scheduler={self.scheduler})")
 
-# Add Solution class if it's used by load_csv_data for solution files
+
 class Solution:
     def __init__(self, task_name, component_id, task_schedulable, avg_response_time, max_response_time, component_schedulable):
         self.task_name = task_name

@@ -1,11 +1,6 @@
 import csv
 from typing import List, Any, Type # Ensure Type is imported
 
-# Assuming your model classes (Task, Component, Core, Solution) are defined
-# in analysis.core or are imported appropriately.
-# from .core import Task, Component, Core, Solution # Example if they are in core.py
-
-# T = TypeVar('T') # Not strictly needed if using Type[Any] or specific types
 
 def load_csv_data(file_path: str, model_class: Type[Any]) -> List[Any]: # Use Type[Any] for generic model_class
     """
@@ -24,18 +19,8 @@ def load_csv_data(file_path: str, model_class: Type[Any]) -> List[Any]: # Use Ty
         with open(file_path, 'r', newline='') as csvfile: # Added newline=''
             reader = csv.DictReader(csvfile)
             for i, row in enumerate(reader):
-                # Sanitize row keys: remove leading/trailing whitespace
-                # and handle potential byte order mark (BOM) in the first header
-                # This is especially important if CSVs are saved with BOM from some editors
-                
-                # Get headers from the reader if it's the first row, to handle BOM in first key
-                # if i == 0:
-                #     fieldnames = [key.lstrip('\ufeff') for key in reader.fieldnames]
-                # else:
-                #     fieldnames = reader.fieldnames
 
-                # cleaned_row = {key.strip(): value for key, value in row.items()}
-                # A more robust way to clean keys, especially the first one for BOM:
+
                 cleaned_row = {}
                 for k, v in row.items():
                     # Remove BOM from the first key if present
@@ -64,7 +49,7 @@ def load_csv_data(file_path: str, model_class: Type[Any]) -> List[Any]: # Use Ty
             
     return models
 
-# Example of your other functions (ensure Solution class is defined as above)
+
 def write_solutions_to_csv(solutions: List[Any], filename_prefix: str) -> None: # Assuming Solution type
     output_filename = f"{filename_prefix}_solutions.csv"
     if not solutions:
@@ -92,25 +77,3 @@ def write_solutions_to_csv(solutions: List[Any], filename_prefix: str) -> None: 
 
     except Exception as e:
         print(f"Error writing to CSV file {output_filename}: {e}")
-
-# lcm_of_list can remain as is
-import math
-from functools import reduce
-def lcm_of_list(numbers: List[int]) -> int:
-    """Calculate the least common multiple of a list of numbers."""
-    if not numbers:
-        return 1 # LCM of empty set is 1
-    
-    # Filter out any non-positive numbers if necessary, or ensure inputs are positive
-    positive_numbers = [n for n in numbers if n > 0]
-    if not positive_numbers:
-        if any(n == 0 for n in numbers): # LCM with 0 is 0
-            return 0
-        return 1 # Or handle as an error if all numbers are negative/non-positive
-
-    def lcm(a: int, b: int) -> int:
-        if a == 0 or b == 0:
-            return 0
-        return abs(a * b) // math.gcd(a, b) if a != 0 and b != 0 else 0
-    
-    return reduce(lcm, positive_numbers) if positive_numbers else 1

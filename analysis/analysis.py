@@ -5,7 +5,7 @@ import math
 from typing import List, Dict, Tuple, Optional, Union, Any
 from bdr_model import BDRModel
 from core import Core, Component, Task, Solution
-from csv_functions import lcm_of_list, load_csv_data
+from utils import load_csv_data
 
 class HierarchicalSchedulabilityAnalyzer:
     """
@@ -157,7 +157,7 @@ class HierarchicalSchedulabilityAnalyzer:
 
 
 
-    # This function would be part of your HierarchicalSchedulabilityAnalyzer class
+    
     def analyze_component(self, component: Component, parent_bdr: BDRModel, speed_factor: float) -> Dict:
         # Initialize component result dictionary
         component_result = {
@@ -448,10 +448,6 @@ class HierarchicalSchedulabilityAnalyzer:
         return results
     
 
-    # Inside HierarchicalSchedulabilityAnalyzer class in analysis.py
-
-    # Add delta_step as a class member or constant if you prefer
-    # self.delta_search_step = 1.0 # Or some other small positive value
 
     def find_minimal_bdr_interface(self, component: Component, adjusted_tasks: List[Task], parent_bdr_delta: float) -> Optional[Tuple[float, float]]:
         """
@@ -486,9 +482,9 @@ class HierarchicalSchedulabilityAnalyzer:
         if not periods: # handles cases where no tasks or tasks have zero period
             delta_max = 100.0
         else:
-            delta_max = float(lcm_of_list(periods))
+            delta_max = float(math.lcm(*periods))
 
-        if delta_max > 5000.0: # Cap delta_max
+        if delta_max > 5000.0: # Cap delta_max for computational efficiency
             delta_max = 5000.0
         if delta_max == 0 : delta_max = 100.0 # Ensure delta_max is positive if LCM was 0
 
@@ -586,50 +582,6 @@ class HierarchicalSchedulabilityAnalyzer:
 
         return wcrt
 
-    def WCRT_PS_basic(self, sporadic_task: Task, Cps: float, Tps: float) -> float:
-        """
-        Calculate a basic (often pessimistic) WCRT for a sporadic task under a Polling Server.
-        This is a placeholder and should be replaced with a more standard analysis.
-        It assumes the task might arrive just after the server has finished its budget,
-        waits for the next server period, and then gets served.
-        Does not account for other sporadic tasks contending for the server.
-        """
-        if sporadic_task.wcet > Cps:
-            return float('inf') # Task cannot be served in one server budget activation
-
-        # Time until next server activation + time server is busy before us (worst case 0 if we are first) + our execution
-        # Worst case: arrives, server just finished its budget. Waits Tps. Server gets budget Cps. Executes.
-        # This simple bound is often given as 2*Tps (to start execution) + C_task or similar for simpler cases.
-        # A bound from some literature (e.g., related to bandwidth preservation):
-        # Response time R_i <= t_i + C_i where t_i is solution to t_i = B_i(t_i) + (T_s - C_s)
-        # B_i(t_i) is blocking from higher priority sporadic tasks.
-        # This is too complex for a quick addition.
-
-        # Simplistic placeholder:
-        # Max wait for server to become active and have budget for this task
-        wait_time = Tps + (Tps - Cps) # Wait for next period + time server might be idle in its period
-        execution_in_server = math.ceil(sporadic_task.wcet / Cps) * Tps - (Tps - sporadic_task.wcet) # Simplified if fits one Cps
-        
-        if sporadic_task.wcet <= Cps:
-             # Arrives at start of server period, server busy for (Tps-Cps), then task gets Cps.
-             # Or arrives right after server used budget, waits Tps.
-             # Consider the model from Burns & Wellings for PS (section on Polling Servers):
-             # R = finish_time - arrival_time
-             # Worst-case queueing time for a task arriving at t_arrival:
-             # q_i = (k_i -1)Tps + Cps   (where k_i is number of server instances to complete Ci)
-             # Completion time C_i_f = q_i + C_i
-             # This is also simplified.
-             # Let's use a bound often cited: R_i <= 2*Tps + execution_time_within_server
-             # Execution time within server assuming it gets dedicated slot when server runs:
-             # Number of server periods needed: ceil(WCET_s / Cps)
-             # Time taken = (ceil(WCET_s / Cps) - 1) * Tps + (time in last server period)
-             # This is getting into detailed server theory which is beyond a quick update.
-
-             # **VERY BASIC PESSIMISTIC PLACEHOLDER**:
-             return 2 * Tps + sporadic_task.wcet
-
-
-        return float('inf') # If WCET > Cps and we don't model multi-period execution by server
 
 
 
