@@ -1,5 +1,6 @@
 class Task:
-    def __init__(self, task_name, wcet, period, component_id, priority):
+    def __init__(self, task_name, wcet, period, component_id, priority, task_type ="Periodic",deadline=0):
+    
         self.task_name = task_name
         self.wcet = float(wcet)
         self.period = float(period)
@@ -14,6 +15,9 @@ class Task:
         # the list of response times of the task
         self.response_times = []
         self.schedulable = True
+        if task_type == "periodic":
+            self.deadline= deadline
+
 
     def __repr__(self):
         return f"\nTask Name: {self.task_name}, WCET: {self.wcet}, Period: {self.period} | Priority: {self.priority}"
