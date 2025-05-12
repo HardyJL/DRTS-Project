@@ -241,7 +241,35 @@ def main():
     # 8. Test case with sporadic tasks
     #    This is a more complex case, as it requires careful task generation.
     generate_test_case(
-        name="small-sporadic-task-test-case",
+        name="small-unschedulable-sporadic-task-test-case",
+        num_cores=1,
+        num_components=1,
+        num_tasks=5,
+        utilization=50, # Moderate utilization
+        schedulable=False, # This should be unschedulable
+        speed_range=(1.0, 1.0),
+        sporadic_ratio=0.3, # 30% sporadic tasks
+        sporadic_deadline_range=(0.7, 1.0), # Deadline factor relative to MIT
+        seed=106
+    )
+
+    # 9. Test case with sporadic tasks and a very high sporadic ratio
+    generate_test_case(
+        name="large-unschedulable-sporadic-task-test-case",
+        num_cores=1,
+        num_components=1,
+        num_tasks=10,
+        utilization=80, # Higher utilization
+        schedulable=False, # This should be unschedulable
+        speed_range=(1.0, 1.0),
+        sporadic_ratio=0.8, # 80% sporadic tasks
+        sporadic_deadline_range=(0.5, 1.0), # Deadline factor relative to MIT
+        seed=107
+    )
+
+    # 10. schedulable case with sporadic tasks
+    generate_test_case(
+        name="small-schedulable-sporadic-task-test-case",
         num_cores=1,
         num_components=1,
         num_tasks=5,
@@ -250,7 +278,7 @@ def main():
         speed_range=(1.0, 1.0),
         sporadic_ratio=0.3, # 30% sporadic tasks
         sporadic_deadline_range=(0.7, 1.0), # Deadline factor relative to MIT
-        seed=106
+        seed=108
     )
 
     print("\nAll test cases generated successfully!")
