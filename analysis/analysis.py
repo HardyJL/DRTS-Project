@@ -3,9 +3,9 @@ import sys
 import csv
 import math
 from typing import List, Dict, Tuple, Optional, Union, Any
-from bdr_model import BDRModel
-from core import Core, Component, Task, Solution
-from utils import load_csv_data
+from .bdr_model import BDRModel
+from .core import Core, Component, Task, Solution
+from .utils import load_csv_data
 
 class HierarchicalSchedulabilityAnalyzer:
     """
