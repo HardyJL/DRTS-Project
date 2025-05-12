@@ -18,55 +18,67 @@ from hierarchical_generator.task_generator import TaskGenerator
 from hierarchical_generator.writer import CSVWriter
 
 
-def generate_test_case(name, num_cores, num_components, num_tasks, 
-                      utilization, schedulable=True, speed_range=(0.5, 1.5), seed=None):
+def generate_test_case(name, num_cores, num_components, num_tasks,
+                      utilization, schedulable=True, speed_range=(0.5, 1.5),
+                      sporadic_ratio=0.0, # New parameter, default to 0
+                      sporadic_deadline_range=(0.7, 1.0), # New parameter
+                      seed=None):
     """Generate a single test case with the given parameters."""
     # Set up configuration
-    config = Config()
+    config = Config() # Initializes with defaults
     config.num_cores = num_cores
     config.num_components = num_components
     config.num_tasks = num_tasks
     config.utilization = utilization
-    config.output_dir = "Generated_Test_Cases"
+    config.output_dir = "Generated_Test_Cases" # Consistent with previous
     config.test_case_name = name
     config.speed_factor_range = speed_range
     config.schedulable = schedulable
     config.seed = seed
-    
+    config.sporadic_task_ratio = sporadic_ratio # Set from function argument
+    config.sporadic_deadline_factor_range = sporadic_deadline_range # Set from function argument
+
+    # Print config being used for this specific test case generation
+    print(f"\n--- Generating Test Case: {name} ---")
     config.print_config()
+
 
     # Set random seed if provided
     if seed is not None:
         random.seed(seed)
-    
+        # Note: numpy's random seed is not explicitly set here,
+        # but 'random.seed()' can influence it indirectly in some cases.
+        # For full reproducibility, you might consider np.random.seed(seed) as well if critical.
+
     # Initialize generators
     core_generator = CoreGenerator(config)
     component_generator = ComponentGenerator(config)
     task_generator = TaskGenerator(config)
     csv_writer = CSVWriter(config)
-    
+
     # Generate cores
     cores = core_generator.generate_cores()
-    
+
     # Distribute utilization among cores
     core_utils = core_generator.distribute_utilization(utilization / 100.0, cores)
-    
+
     # Generate components
     components = component_generator.generate_components(cores, core_utils)
-    
+
     # Distribute tasks among components
     tasks_per_component = task_generator.distribute_tasks(components)
-    
-    # Generate tasks
+
+    # Generate tasks (this will now potentially include sporadic tasks)
     tasks = task_generator.generate_tasks(components, tasks_per_component)
-    
+
     # Adjust schedulability if needed
     tasks = component_generator.adjust_schedulability(components, tasks)
-    
+
     # Write to CSV files
     csv_writer.write_csv_files(cores, components, tasks)
-    
-    print(f"Generated test case: {name}")
+
+    print(f"Finished generating test case: {name}")
+
 
 
 def main():
@@ -220,13 +232,26 @@ def main():
         #    alpha (e.g., 0.2) or a delta that the component's derived delta cannot satisfy.
         #    For instance, if the component derives (alpha=0.5, delta=20),
         #    and you test it against parent_bdr = BDRModel(alpha=0.2, delta=5),
-        #    it will fail on alpha.
+        #    it will fail on alpha. 
         #    If parent_bdr = BDRModel(alpha=0.6, delta=30), it will fail on delta (20 not > 30).
     )
     # Why: Tests the interaction between component-level BDR derivation and
     #      parent-level schedulability according to Theorem 1.
 
-
+    # 8. Test case with sporadic tasks
+    #    This is a more complex case, as it requires careful task generation.
+    generate_test_case(
+        name="small-sporadic-task-test-case",
+        num_cores=1,
+        num_components=1,
+        num_tasks=5,
+        utilization=50, # Moderate utilization
+        schedulable=True, # This should be schedulable
+        speed_range=(1.0, 1.0),
+        sporadic_ratio=0.3, # 30% sporadic tasks
+        sporadic_deadline_range=(0.7, 1.0), # Deadline factor relative to MIT
+        seed=106
+    )
 
     print("\nAll test cases generated successfully!")
 
