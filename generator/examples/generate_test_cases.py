@@ -237,8 +237,8 @@ def main():
         schedulable=True, # This should be schedulable
         speed_range=(1.0, 1.0),
         sporadic_ratio=0.3, # 30% sporadic tasks
-        sporadic_deadline_range=(0.7, 1.0), # Deadline factor relative to MIT
-        seed=108
+        sporadic_deadline_range=(1.0, 1.5), # Deadline factor relative to MIT
+        seed=103
     )
 
     # 11. schedulable case with sporadic tasks and a very high sporadic ratio

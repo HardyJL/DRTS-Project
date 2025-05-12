@@ -1,0 +1,9 @@
+component_id,scheduler,budget,period,core_id,priority
+Magnetometer_Sensor,EDF,1,9,Core_1,0
+Barometer_Sensor,RM,1,8,Core_1,1
+Motion_Sensor,EDF,3,16,Core_2,
+Sonar_Sensor,EDF,1,8,Core_2,
+Control_Unit,RM,2,23,Core_3,0
+Anemometer_Sensor,EDF,1,9,Core_3,1
+Laser_Sensor,EDF,4,38,Core_4,
+Proximity_Sensor,EDF,1,11,Core_4,
