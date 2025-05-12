@@ -1,0 +1,9 @@
+component_id,scheduler,budget,period,core_id,priority
+Lidar_Sensor,EDF,4,35,Core_1,0
+Vibration_Sensor,EDF,2,17,Core_2,
+Proximity_Sensor,RM,2,13,Core_3,0
+Communication_Unit,EDF,2,21,Core_4,
+Camera_Sensor,RM,1,8,Core_5,0
+Magnetometer_Sensor,EDF,1,7,Core_6,
+Thermal_Sensor,EDF,1,7,Core_7,0
+Light_Sensor,EDF,2,26,Core_8,

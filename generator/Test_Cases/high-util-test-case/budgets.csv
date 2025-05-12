@@ -1,0 +1,9 @@
+component_id,scheduler,budget,period,core_id,priority
+Temperature_Sensor,EDF,2,25,Core_1,0
+Proximity_Sensor,RM,4,31,Core_1,1
+Barometer_Sensor,EDF,1,10,Core_2,
+Laser_Sensor,EDF,1,6,Core_2,
+Light_Sensor,EDF,2,25,Core_3,0
+Rain_Gauge_Sensor,EDF,3,38,Core_3,1
+GPS_Sensor,EDF,6,39,Core_4,
+Gyroscope_Sensor,EDF,2,21,Core_4,

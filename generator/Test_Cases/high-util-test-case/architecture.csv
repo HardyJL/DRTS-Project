@@ -1,0 +1,5 @@
+core_id,speed_factor,scheduler
+Core_1,0.77,RM
+Core_2,0.99,EDF
+Core_3,0.58,RM
+Core_4,0.84,EDF

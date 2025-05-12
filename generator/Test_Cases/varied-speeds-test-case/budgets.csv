@@ -1,0 +1,9 @@
+component_id,scheduler,budget,period,core_id,priority
+Anemometer_Sensor,RM,1,7,Core_1,0
+Snow_Gauge_Sensor,RM,2,26,Core_1,1
+Sonar_Sensor,EDF,1,11,Core_2,
+Control_Unit,EDF,3,28,Core_2,
+Bitmap_Processor,EDF,3,37,Core_3,0
+Communication_Unit,EDF,1,11,Core_3,1
+Rain_Gauge_Sensor,EDF,2,19,Core_4,
+Infrared_Sensor,EDF,2,26,Core_4,

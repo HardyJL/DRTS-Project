@@ -1,0 +1,9 @@
+component_id,scheduler,budget,period,core_id,priority
+Radar_Sensor,EDF,4,37,Core_1,0
+Barometer_Sensor,EDF,2,22,Core_1,1
+Thermal_Sensor,EDF,1,14,Core_2,
+Rain_Gauge_Sensor,EDF,1,11,Core_2,
+Thermometer_Sensor,EDF,1,9,Core_3,0
+Hygrometer_Sensor,EDF,2,34,Core_3,1
+Lidar_Sensor,EDF,3,30,Core_4,
+Humidity_Sensor,EDF,2,16,Core_4,

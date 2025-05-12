@@ -1,0 +1,9 @@
+task_name,wcet,period,component_id,priority
+Task_0,21,199,GPS_Sensor,
+Task_1,5,100,GPS_Sensor,
+Task_2,2,10,Vibration_Sensor,0
+Task_3,9,181,Vibration_Sensor,1
+Task_4,5,279,Motion_Sensor,
+Task_5,5,240,Motion_Sensor,
+Task_6,4,50,Motion_Sensor,
+Task_7,3,45,Ultraviolet_Sensor,

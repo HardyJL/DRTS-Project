@@ -1,0 +1,5 @@
+component_id,scheduler,budget,period,core_id,priority
+GPS_Sensor,EDF,3,22,Core_1,0
+Vibration_Sensor,RM,5,18,Core_1,1
+Motion_Sensor,EDF,3,26,Core_2,
+Ultraviolet_Sensor,EDF,1,11,Core_2,
