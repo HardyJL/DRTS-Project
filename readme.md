@@ -123,3 +123,12 @@ To run the simulator with a test case:
    ```bash
    python main.py Test-Cases/2-small-test-case 20
    ```
+
+
+To run the analysis tool with a test case:
+1. Navigate to the `Test-Cases/` folder.
+2. Select a test case folder (e.g., `2-small-test-case`).
+3. Run the analysis tool:
+   ```bash
+   python analysis.py Test-Cases/2-small-test-case 20
+   ```
