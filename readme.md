@@ -130,5 +130,5 @@ To run the analysis tool with a test case:
 2. Select a test case folder (e.g., `2-small-test-case`).
 3. Run the analysis tool:
    ```bash
-   python analysis.py Test-Cases/2-small-test-case 20
+   python analysis.py Test-Cases/2-small-test-case
    ```
