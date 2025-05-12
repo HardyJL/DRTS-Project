@@ -43,6 +43,23 @@ def main():
     simulator.simulate(str(sys.argv[1]))
     # simulator.simulate(int(sys.argv[2]),str(sys.argv[1]))
 
+def main_test(test_folder):
+    # This function is for testing purposes only
+    architectures, tasks, budgets = f"{test_folder}/architecture.csv", f"{test_folder}/tasks.csv", f"{test_folder}/budgets.csv"
+    cores = load_models(architectures, tasks, budgets)
+
+    simulator = Simulation(cores)
+    simulator.simulate(test_folder)
+    # simulator.simulate(int(sys.argv[2]),str(sys.argv[1]))
+
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    # Iterate over all test folders in the test directory
+    test_directory = "Test-Cases"
+
+    for root, dirs, files in os.walk(test_directory):
+        for dirname in dirs:
+            test_folder = os.path.join(root, dirname)
+            main_test(test_folder)
