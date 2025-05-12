@@ -15,8 +15,12 @@ class Task:
         # the list of response times of the task
         self.response_times = []
         self.schedulable = True
-        if task_type == "periodic":
-            self.deadline= deadline
+        if task_type == "Periodic":
+            self.deadline = period
+        else: 
+            self.deadline = deadline
+
+       
 
 
     def __repr__(self):

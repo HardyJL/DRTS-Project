@@ -2,7 +2,7 @@ from . import Task
 
 
 class Component:
-    def __init__(self, component_id, scheduler, budget, period, core_id, priority,server_priority=0,server_period=0):
+    def __init__(self, component_id, scheduler, budget, period, core_id, priority=0,server_priority=0,server_period=0):
         self.component_id = component_id
         self.budget = float(budget)
         self.period = float(period)
@@ -15,7 +15,6 @@ class Component:
         self.current_start_time = 0
         self.server_priority = server_priority
         self.server_period = server_period
-
     def __repr__(self):
         return f"\nComponent ID = ({self.component_id}) | Budget ({self.budget}) | Period ({self.period}) | Scheduler ({self.scheduler}) \n Tasks: {self.tasks}"
 
@@ -28,6 +27,7 @@ class Component:
             execution_time (int): the execution time of the task
             time_difference (int): the time difference between the current time and finish time 
         """
+        #if task.task_ 
         original_task = [
             t for t in self.tasks if t.task_name == task.task_name][0]
         response_time = execution_time - task.current_start_time

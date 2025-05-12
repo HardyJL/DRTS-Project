@@ -3,7 +3,7 @@ import os.path
 
 from csv_functions import load_models_from_csv
 from models import Task, Core, Component
-from simulation import Simulation
+from Simulation import Simulation
 
 
 def load_models(architectures, tasks, budgets):
@@ -54,10 +54,10 @@ def main_test(test_folder):
 
 
 if __name__ == "__main__":
-    # main()
+    #main()
 
     # Iterate over all test folders in the test directory
-    test_directory = "Test-Cases"
+    test_directory = "Test_Cases"
 
     for root, dirs, files in os.walk(test_directory):
         for dirname in dirs:
