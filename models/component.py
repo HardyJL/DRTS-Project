@@ -2,7 +2,7 @@ from . import Task
 
 
 class Component:
-    def __init__(self, component_id, scheduler, budget, period, core_id, priority):
+    def __init__(self, component_id, scheduler, budget, period, core_id, priority,server_priority=0,server_period=0):
         self.component_id = component_id
         self.budget = float(budget)
         self.period = float(period)
@@ -13,6 +13,8 @@ class Component:
         self.ready_queue: list[Task] = []
         self.remaining_time = float(budget)
         self.current_start_time = 0
+        self.server_priority = server_priority
+        self.server_period = server_period
 
     def __repr__(self):
         return f"\nComponent ID = ({self.component_id}) | Budget ({self.budget}) | Period ({self.period}) | Scheduler ({self.scheduler}) \n Tasks: {self.tasks}"
