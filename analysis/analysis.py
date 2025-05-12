@@ -159,249 +159,187 @@ class HierarchicalSchedulabilityAnalyzer:
 
     # This function would be part of your HierarchicalSchedulabilityAnalyzer class
     def analyze_component(self, component: Component, parent_bdr: BDRModel, speed_factor: float) -> Dict:
+        # Initialize component result dictionary
         component_result = {
             "component_id": component.component_id,
             "scheduler": component.scheduler,
-            "is_schedulable": False, # Default to not schedulable
-            "tasks_schedulable": [],
-            "sporadic_tasks_analysis": {} # To store results for sporadic tasks
+            "is_schedulable": False,
+            "tasks_schedulable": [], # Will store dicts for each task's analysis
+            "sporadic_tasks_analysis": {}, # Store server specific info
+            "alpha": 0.0, "delta": 0.0, "budget": 0.0, "period": 0.0 # BDR params
         }
 
-        # Adjust WCETs for all tasks in the component based on core speed_factor
-        # and separate periodic and sporadic tasks
+        # Adjust WCETs for core speed and separate task types
         native_periodic_tasks_adjusted: List[Task] = []
         sporadic_tasks_for_server_adjusted: List[Task] = []
-
         for task in component.tasks:
-            adjusted_wcet = task.original_wcet / speed_factor # Assuming original_wcet stores nominal
-            # Create new Task instances for analysis to avoid modifying original task list shared across calls
+            adjusted_wcet = task.original_wcet / speed_factor
+            # Create a new Task instance for analysis to keep original data clean
             adjusted_task = Task(
-                task_name=task.task_name,
-                wcet=adjusted_wcet,
-                period=task.period, # This is MIT for sporadic
-                component_id=task.component_id,
-                priority=task.priority,
-                task_type=task.task_type,
-                deadline=task.deadline
+                task_name=task.task_name, wcet=adjusted_wcet, period=task.period,
+                component_id=task.component_id, priority=task.priority,
+                task_type=task.task_type, deadline=task.deadline
             )
-            adjusted_task.original_wcet = task.original_wcet # Keep track if needed
+            adjusted_task.original_wcet = task.original_wcet # Keep reference to nominal WCET
 
             if task.task_type == "periodic":
                 native_periodic_tasks_adjusted.append(adjusted_task)
             elif task.task_type == "sporadic":
                 sporadic_tasks_for_server_adjusted.append(adjusted_task)
 
-        # --- Effective tasks for BDR analysis of the component ---
-        # This list includes native periodic tasks and the Polling Server (if any)
+        # Prepare the list of tasks for the component's BDR interface analysis
+        # This includes native periodic tasks and the Polling Server task (if any)
         effective_tasks_for_bdr: List[Task] = list(native_periodic_tasks_adjusted)
+        ps_task_for_analysis: Optional[Task] = None
         has_server = False
+
         if component.polling_server_task:
-            # Adjust server's WCET (its budget Cps) by speed_factor if it represents CPU time on this core
-            # Typically, server budget Cps is defined as CPU time, so it should be scaled.
+            has_server = True
+            # Server's budget (Cps) is CPU time, so adjust for core speed when part of component's BDR demand
             adjusted_server_wcet = component.polling_server_task.original_wcet / speed_factor
-            
-            # Create an adjusted copy for analysis if not already done, or update existing
-            # For simplicity, let's assume polling_server_task was created with nominal WCET
-            # and needs adjustment here.
             ps_task_for_analysis = Task(
                 task_name=component.polling_server_task.task_name,
-                wcet=adjusted_server_wcet, # Server budget C_ps
-                period=component.polling_server_task.period, # Server period T_ps
+                wcet=adjusted_server_wcet, # This is the Cps demand on the component's BDR
+                period=component.polling_server_task.period, # Tps
                 component_id=component.polling_server_task.component_id,
                 priority=component.polling_server_task.priority,
-                task_type="periodic", # Server is periodic
-                deadline=component.polling_server_task.deadline # Server deadline D_ps = T_ps
+                task_type="periodic", # Server is treated as periodic by the component
+                deadline=component.polling_server_task.deadline
             )
+            # Store the nominal Cps (server budget) for later use with sporadic tasks
+            ps_task_for_analysis.original_wcet = component.polling_server_task.original_wcet
             effective_tasks_for_bdr.append(ps_task_for_analysis)
-            has_server = True
-            print(f"INFO: Component {component.component_id} includes server {ps_task_for_analysis} in its BDR demand.")
 
-
-        # 1. Find minimal BDR interface for the component's effective periodic load
+        # 1. Find minimal BDR interface for the component's effective load (periodic + server)
         found_bdr_params = self.find_minimal_bdr_interface(component, effective_tasks_for_bdr, parent_bdr.delta)
-
-        derived_alpha = 0.0
-        derived_delta = 0.0
         component_bdr_for_analysis: Optional[BDRModel] = None
-        component_internally_schedulable = False # Schedulability of periodic tasks + server
+        component_internally_schedulable = False # Schedulability of (periodic tasks + server task)
 
         if found_bdr_params:
             derived_alpha, derived_delta = found_bdr_params
             component_bdr_for_analysis = BDRModel(derived_alpha, derived_delta)
-            # Check if effective tasks (periodic + server) are schedulable under this derived BDR
+            # Check if effective tasks are schedulable under this derived BDR
             if component.scheduler == "EDF":
                 component_internally_schedulable = component_bdr_for_analysis.is_schedulable_edf_workload(effective_tasks_for_bdr)
             else: # RM
                 component_internally_schedulable = component_bdr_for_analysis.is_schedulable_rm_workload(effective_tasks_for_bdr)
         else:
-            print(f"    INFO: Component {component.component_id} - find_minimal_bdr_interface failed. Using original budget/period from CSV for BDR.")
-            original_budget = float(component.budget) # Component's BDR interface budget
-            original_period = float(component.period) # Component's BDR interface period
-            if original_period == 0: original_period = 1.0 # Avoid division by zero
+            # Fallback to using original budget/period from CSV if find_minimal_bdr_interface fails
+            original_budget = float(component.budget)
+            original_period = float(component.period) if float(component.period) > 0 else 1.0
             component_bdr_for_analysis = BDRModel.from_periodic_resource(original_budget, original_period)
             derived_alpha = component_bdr_for_analysis.alpha
             derived_delta = component_bdr_for_analysis.delta
-            component_internally_schedulable = False # Cannot guarantee with original if find_minimal failed
+            # Cannot guarantee internal schedulability if minimal search failed and using fallback
+            component_internally_schedulable = False
+
 
         component_result["alpha"] = derived_alpha
         component_result["delta"] = derived_delta
-        # Report budget/period of the BDR interface of the component
-        if component_bdr_for_analysis:
-             q,p = component_bdr_for_analysis.to_periodic_resource()
-             component_result["budget"] = q
-             component_result["period"] = p
-        else: # Should not happen if fallback above works
-             component_result["budget"] = component.budget
-             component_result["period"] = component.period
+        if component_bdr_for_analysis: # Should always be true due to fallback
+             q_comp_bdr, p_comp_bdr = component_bdr_for_analysis.to_periodic_resource()
+             component_result["budget"] = q_comp_bdr
+             component_result["period"] = p_comp_bdr
 
-
-        # Populate task schedulability for NATIVE PERIODIC tasks
+        # 2. Analyze schedulability of NATIVE PERIODIC tasks under the derived component BDR
         if native_periodic_tasks_adjusted and component_bdr_for_analysis:
-            details_periodic = {}
+            sched_details_periodic = {}
             if component.scheduler == "EDF":
-                # Condition: task is periodic AND ( (server exists AND task is not server) OR server does not exist )
-                temp_edf_check_list = [
-                    t for t in effective_tasks_for_bdr 
-                    if t.task_type == 'periodic' and 
-                       ( (component.polling_server_task and t.task_name != component.polling_server_task.task_name) or 
-                         (not component.polling_server_task) )
-                ]
-                if temp_edf_check_list:
-                    details_periodic = component_bdr_for_analysis.get_schedulable_tasks_edf(temp_edf_check_list)
-                else:
-                    details_periodic = {}
-
+                # If the combined load (periodic+server) is EDF schedulable, native periodics are too.
+                all_effective_sched = component_bdr_for_analysis.is_schedulable_edf_workload(effective_tasks_for_bdr)
+                for task in native_periodic_tasks_adjusted:
+                    sched_details_periodic[task.task_name] = all_effective_sched
             else: # RM
-                details_periodic = component_bdr_for_analysis.get_schedulable_tasks_rm(native_periodic_tasks_adjusted) # Pass only native periodic
+                sched_details_periodic = component_bdr_for_analysis.get_schedulable_tasks_rm(native_periodic_tasks_adjusted)
 
             for task in native_periodic_tasks_adjusted:
-                is_sched = details_periodic.get(task.task_name, False)
+                is_task_sched = sched_details_periodic.get(task.task_name, False)
                 component_result["tasks_schedulable"].append({
                     "task_name": task.task_name, "wcet": task.original_wcet, "period": task.period,
-                    "task_type": "periodic", "deadline": task.deadline, "is_schedulable": is_sched
+                    "task_type": "periodic", "deadline": task.deadline, "is_schedulable": is_task_sched,
+                    "wcrt": -1.0 # WCRT for periodic tasks not calculated in this step
                 })
-                if not is_sched: component_internally_schedulable = False
-        
-        # Schedulability of the POLLING SERVER itself (if it exists)
+                if not is_task_sched: component_internally_schedulable = False # Re-evaluate based on individual results
+
+        # 3. Analyze schedulability of the POLLING SERVER task itself
         server_is_schedulable_by_bdr = False
         if has_server and component_bdr_for_analysis and ps_task_for_analysis:
             if component.scheduler == "EDF":
-                # Already checked as part of effective_tasks_for_bdr with EDF
-                # Need a way to extract server's specific status if is_schedulable_edf_workload doesn't return per-task
-                 server_is_schedulable_by_bdr = component_bdr_for_analysis.is_schedulable_edf_workload([ps_task_for_analysis]) # Check server alone
+                # If the set of effective_tasks_for_bdr (which includes ps_task_for_analysis)
+                # is schedulable by EDF, then ps_task_for_analysis is schedulable.
+                server_is_schedulable_by_bdr = component_bdr_for_analysis.is_schedulable_edf_workload(effective_tasks_for_bdr)
             else: # RM
                 server_is_schedulable_by_bdr = component_bdr_for_analysis.is_schedulable_rm_task(ps_task_for_analysis, effective_tasks_for_bdr)
             
             component_result["tasks_schedulable"].append({
-                "task_name": ps_task_for_analysis.task_name, "wcet": ps_task_for_analysis.original_wcet, # This should be Cps (nominal)
-                "period": ps_task_for_analysis.period, "task_type": "server",
-                "deadline": ps_task_for_analysis.deadline, "is_schedulable": server_is_schedulable_by_bdr
+                "task_name": ps_task_for_analysis.task_name,
+                "wcet": ps_task_for_analysis.original_wcet, # Report nominal Cps
+                "period": ps_task_for_analysis.period, # Tps
+                "task_type": "server", "deadline": ps_task_for_analysis.deadline,
+                "is_schedulable": server_is_schedulable_by_bdr,
+                "wcrt": -1.0 # WCRT for server itself not calculated here beyond schedulability
             })
             if not server_is_schedulable_by_bdr: component_internally_schedulable = False
-            print(f"INFO: Server {ps_task_for_analysis.task_name} schedulable by BDR: {server_is_schedulable_by_bdr}")
 
-
-        # 2. Analyze schedulability of SPORADIC tasks by the Polling Server
+        # 4. Analyze schedulability of SPORADIC tasks by the (now confirmed) Polling Server
         sporadic_tasks_overall_schedulable = True
         if sporadic_tasks_for_server_adjusted and has_server and server_is_schedulable_by_bdr:
-            # Use nominal Cps for this analysis (not scaled by core speed factor, as it's about server's own capacity)
-            nominal_cps = component.polling_server_task.wcet # Cps
-            nominal_tps = component.polling_server_task.period # Tps
-            
-            # Perform schedulability analysis for sporadic tasks served by this PS
-            # This is a placeholder for actual analysis logic.
-            # Example: simple utilization check + basic response time bound.
-            total_sporadic_util = sum(st.wcet / st.period for st in sporadic_tasks_for_server_adjusted if st.period > 0) # period is MIT
-            server_util = nominal_cps / nominal_tps if nominal_tps > 0 else 0
+            # Use NOMINAL server parameters for WCRT of sporadic tasks
+            nominal_cps = ps_task_for_analysis.original_wcet if ps_task_for_analysis else 0.0
+            nominal_tps = ps_task_for_analysis.period if ps_task_for_analysis else 0.0
 
-            component_result["sporadic_tasks_analysis"]["server_cps"] = nominal_cps
-            component_result["sporadic_tasks_analysis"]["server_tps"] = nominal_tps
-            component_result["sporadic_tasks_analysis"]["server_util"] = server_util
-            component_result["sporadic_tasks_analysis"]["total_sporadic_task_util"] = total_sporadic_util
-            
-            all_sporadic_individually_sched = True
-            if total_sporadic_util > server_util:
-                print(f"    WARNING: Sporadic tasks demand ({total_sporadic_util:.2f}) for {component.component_id} exceeds server supply ({server_util:.2f}).")
-                all_sporadic_individually_sched = False # Basic necessary condition fails
-
-            # Individual sporadic task checks (placeholder for a more formal WCRT_sporadic_PS analysis)
-            for stask in sporadic_tasks_for_server_adjusted:
-                # Simplistic Check: Can task run within one server budget if it gets full budget?
-                # And a very rough response time estimate. This needs to be replaced by proper PS theory.
-                # R_s <= D_s
-                # A basic, often pessimistic, check for Polling Server for task j:
-                # If Cj > Cps, it's unschedulable by this server if it needs to run contiguously.
-                # Response time bound: roughly 2*Tps (worst case wait for server + execution)
-                # This is NOT a formal bound for most cases.
-                # You should implement a known WCRT formula for sporadic tasks under a PS.
-                # e.g., from Liu & Layland or Buttazzo for aperiodic servers.
-                # For now, a placeholder:
-                R_sj_estimate = 2 * nominal_tps + stask.wcet 
-                # This estimate is very basic and likely incorrect for general case.
-                # It assumes task might wait almost 2 periods and then executes.
-
-                # A more robust check could be based on "supply on demand" from the server.
-                # For example, check if dbf_sporadic(t) <= sbf_server(t)
-                # where sbf_server(t) is the supply from the polling server.
-                # sbf_PS(t) = max(0, floor((t - (Tps-Cps))/Tps)*Cps + min(Cps, t - (Tps-Cps) % Tps )) (approx)
-                # This is becoming complex. For the project, "schedulability analysis" usually implies known bounds.
-
-                # Let's use a very basic placeholder: if total util is ok, and individual WCET fits budget.
-                stask_sched = True
-                if stask.wcet > nominal_cps : # Task too big for one server budget activation
-                     stask_sched = False
-                if not all_sporadic_individually_sched : # If total util already failed
-                     stask_sched = False
+            if nominal_cps <= 0 or nominal_tps <= 0: # Check for valid server params
+                sporadic_tasks_overall_schedulable = False if sporadic_tasks_for_server_adjusted else True
+                for stask in sporadic_tasks_for_server_adjusted:
+                    component_result["tasks_schedulable"].append({
+                        "task_name": stask.task_name, "wcet": stask.original_wcet, "period": stask.period,
+                        "task_type": "sporadic", "deadline": stask.deadline,
+                        "is_schedulable": False, "wcrt": float('inf')
+                    })
+            else:
+                component_result["sporadic_tasks_analysis"]["server_cps"] = nominal_cps
+                component_result["sporadic_tasks_analysis"]["server_tps"] = nominal_tps
                 
-                # If you implement a WCRT_PS(stask, nominal_cps, nominal_tps) function:
-                # wcrt_stask = WCRT_PS(stask, nominal_cps, nominal_tps)
-                # stask_sched = wcrt_stask <= stask.deadline
-
-                component_result["tasks_schedulable"].append({
-                    "task_name": stask.task_name, "wcet": stask.original_wcet, "period": stask.period, # period is MIT
-                    "task_type": "sporadic", "deadline": stask.deadline, "is_schedulable": stask_sched
-                })
-                if not stask_sched:
-                    sporadic_tasks_overall_schedulable = False
-            
-            if not all_sporadic_individually_sched : sporadic_tasks_overall_schedulable = False
-
+                for stask in sporadic_tasks_for_server_adjusted:
+                    # stask.wcet is already adjusted for core speed
+                    stask_wcrt = self.WCRT_sporadic_task_under_PS(stask, nominal_cps, nominal_tps)
+                    stask_is_sched = (stask_wcrt <= stask.deadline)
+                    
+                    component_result["tasks_schedulable"].append({
+                        "task_name": stask.task_name, "wcet": stask.original_wcet, # Report nominal
+                        "period": stask.period, # MIT
+                        "task_type": "sporadic", "deadline": stask.deadline,
+                        "is_schedulable": stask_is_sched, "wcrt": stask_wcrt
+                    })
+                    if not stask_is_sched:
+                        sporadic_tasks_overall_schedulable = False
+        
         elif sporadic_tasks_for_server_adjusted and (not has_server or not server_is_schedulable_by_bdr):
-            # If there are sporadic tasks but server isn't schedulable or doesn't exist
+            # If sporadic tasks exist but no server or server isn't schedulable
             sporadic_tasks_overall_schedulable = False
-            for stask in sporadic_tasks_for_server_adjusted: # Mark them all as unschedulable
+            for stask in sporadic_tasks_for_server_adjusted:
                  component_result["tasks_schedulable"].append({
                     "task_name": stask.task_name, "wcet": stask.original_wcet, "period": stask.period,
-                    "task_type": "sporadic", "deadline": stask.deadline, "is_schedulable": False
+                    "task_type": "sporadic", "deadline": stask.deadline,
+                    "is_schedulable": False, "wcrt": float('inf')
                 })
 
-        # 3. Overall component schedulability
-        # Component is schedulable if its effective periodic load is schedulable by its BDR,
-        # AND that BDR is schedulable by parent (Theorem 1),
-        # AND all sporadic tasks are schedulable by their server.
+        # 5. Overall component schedulability (hierarchical check)
         component_schedulable_hierarchically = False
         if component_internally_schedulable and component_bdr_for_analysis:
-             # Check Theorem 1 against parent_bdr
+            # Check if the component's derived BDR can be scheduled by the parent BDR
             if BDRModel.check_theorem1_schedulability(parent_bdr, [component_bdr_for_analysis]):
                 component_schedulable_hierarchically = True
             else:
-                component_result["theorem1_failed"] = True
-                print(f"    INFO: Component {component.component_id} failed Theorem 1 check against parent BDR {parent_bdr}.")
+                component_result["theorem1_failed"] = True # Mark failure for Theorem 1
         
-        # Final decision for component schedulability
-        if sporadic_tasks_for_server_adjusted: # If there were sporadic tasks
-            component_result["is_schedulable"] = component_internally_schedulable and component_schedulable_hierarchically and sporadic_tasks_overall_schedulable
-        else: # Only periodic tasks
+        # Final schedulability status for the component
+        if not sporadic_tasks_for_server_adjusted: # Only periodic tasks (or server treated as periodic)
             component_result["is_schedulable"] = component_internally_schedulable and component_schedulable_hierarchically
-        
-        if not component_result["is_schedulable"]:
-            print(f"    DEBUG: Component {component.component_id} determined UNSCHEDULABLE.")
-            print(f"    DEBUG:   Internal (periodic+server) sched: {component_internally_schedulable}")
-            print(f"    DEBUG:   Hierarchical (Theorem 1) sched: {component_schedulable_hierarchically}")
-            if sporadic_tasks_for_server_adjusted:
-                print(f"    DEBUG:   Sporadic tasks sched by server: {sporadic_tasks_overall_schedulable}")
-
-
+        else: # Has sporadic tasks
+            component_result["is_schedulable"] = component_internally_schedulable and \
+                                                 component_schedulable_hierarchically and \
+                                                 sporadic_tasks_overall_schedulable
         return component_result
 
         
@@ -613,6 +551,41 @@ class HierarchicalSchedulabilityAnalyzer:
 
         print(f"    DEBUG: No suitable BDR found for component {component.component_id} within search range.")
         return None
+    
+
+    def WCRT_sporadic_task_under_PS(self, sporadic_task: Task, Cps: float, Tps: float) -> float:
+        """
+        Calculates WCRT for a sporadic task served by a Polling Server (PS)
+        using a standard WCRT bound for Polling Servers.
+
+        Args:
+            sporadic_task: The sporadic task to analyze. Its wcet is assumed to be
+                           already adjusted for the core's speed factor.
+            Cps: Nominal budget of the Polling Server.
+            Tps: Nominal period of the Polling Server.
+
+        Returns:
+            The Worst-Case Response Time (WCRT) for the sporadic task.
+            Returns float('inf') if parameters are invalid or task is unschedulable by this model.
+        """
+        Ci = sporadic_task.wcet  # Adjusted WCET of the sporadic task
+
+        # Validate inputs
+        if Ci < 0: # A WCET of 0 means task completes instantly if no queueing.
+            return 0.0 
+        if Cps <= 0 or Tps <= 0:
+            # Server has no capacity or invalid period, cannot serve any task with Ci > 0
+            return float('inf') if Ci > 0 else 0.0
+
+        # Standard WCRT bound for a task served by a Polling Server:
+        # R_i <= (ceil(C_i / C_ps) + 1) * T_ps
+        # This accounts for the task arriving just after the server has polled (worst-case phasing),
+        # and then the number of server periods required to execute the task.
+        num_server_invocations_needed = math.ceil(Ci / Cps)
+        wcrt = (num_server_invocations_needed + 1) * Tps
+
+        return wcrt
+
     def WCRT_PS_basic(self, sporadic_task: Task, Cps: float, Tps: float) -> float:
         """
         Calculate a basic (often pessimistic) WCRT for a sporadic task under a Polling Server.

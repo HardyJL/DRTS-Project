@@ -281,6 +281,20 @@ def main():
         seed=108
     )
 
+    # 11. schedulable case with sporadic tasks and a very high sporadic ratio
+    generate_test_case(
+        name="large-schedulable-sporadic-task-test-case",
+        num_cores=1,
+        num_components=1,
+        num_tasks=10,
+        utilization=80, # Higher utilization
+        schedulable=True, # This should be schedulable
+        speed_range=(1.0, 1.0),
+        sporadic_ratio=0.3, # 30% sporadic tasks
+        sporadic_deadline_range=(1.0, 1.5), # Deadline factor relative to MIT
+        seed=109
+    )
+
     print("\nAll test cases generated successfully!")
 
 
